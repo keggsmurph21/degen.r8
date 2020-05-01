@@ -1,0 +1,15 @@
+{
+  "name": "poker",
+  "version": "1.0.0",
+  "description": "",
+  "main": "lib/main.js",
+  "scripts": {
+    "build": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Kevin Murphy",
+  "license": "GPL-3.0",
+  "dependencies": {
+    "typescript": "^3.8.3"
+  }
+}

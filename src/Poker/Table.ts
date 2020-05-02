@@ -1,5 +1,3 @@
-// vim: syntax=typescript
-
 import { Player } from "./Player";
 import { InvalidStateError } from "./Errors";
 
@@ -13,20 +11,17 @@ export class Table {
     private byPosition: Positions = {};
     private players: Set<Player> = new Set();
 
-    constructor(
-        public readonly size: number,
-        private readonly password?: string)
-    {
+    constructor(public readonly size: number) {
         if (size < MIN_SIZE)
-            throw new InvalidStateError(`Must have {MIN_SIZE} or more players (got {size})!`);
+            throw new InvalidStateError(`Must have ${MIN_SIZE} or more players (got ${size})!`);
         if (size > MAX_SIZE)
-            throw new InvalidStateError(`Must have {MAX_SIZE} or fewer players (got {size})!`);
+            throw new InvalidStateError(`Must have ${MAX_SIZE} or fewer players (got ${size})!`);
         for (let i = 0; i < size; ++i)
             this.byPosition[i] = null;
     }
 
     private isValidIndex(index: number): boolean {
-        return (index < 0) || (this.size <= index);
+        return 0 <= index && index < this.size;
     }
 
     public isFull(): boolean {
@@ -39,11 +34,11 @@ export class Table {
 
     public addPlayer(playerToAdd: Player, position: number): void {
         if (!this.isValidIndex(position))
-            throw new InvalidStateError(`Index {position} out of range (size = {this.size})!`);
+            throw new InvalidStateError(`Index ${position} out of range (size = ${this.size})!`);
         if (this.players.has(playerToAdd))
             throw new InvalidStateError(`This player is already at the Table!`);
         if (this.byPosition[position] !== null)
-            throw new InvalidStateError(`There is already a player at position {position}!`);
+            throw new InvalidStateError(`There is already a player at position ${position}!`);
         this.byPosition[position] = playerToAdd;
         this.players.add(playerToAdd);
     }

@@ -1,4 +1,1 @@
-// vim: syntax=typescript
-
-export class InvalidStateError extends Error {
-};
+export class InvalidStateError extends Error {};

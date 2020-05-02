@@ -2,7 +2,7 @@
     "compileOnSave": true,
     "compilerOptions": {
         "alwaysStrict": true,
-        "baseUrl": ".",
+        "baseUrl": "src",
         "module": "CommonJS",
         "outDir": "lib",
         "removeComments": true,
@@ -12,5 +12,11 @@
         "experimentalDecorators": true,
         "sourceMap": true,
         "sourceRoot": "/public/js"
-    }
+    },
+    "include": [
+        "src/**/*"
+    ],
+    "exclude": [
+        "**/test/**/*"
+    ]
 }

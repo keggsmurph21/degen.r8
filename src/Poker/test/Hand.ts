@@ -2,18 +2,18 @@ import "mocha";
 
 import {expect} from "chai";
 
-import {Rank, Suit} from "../Card";
-import {compareHands, getBestFiveCardHand, HandType, SevenCards} from "../Hand";
+import {Card, Rank, Suit} from "../Card";
+import {compareHands, getBestFiveCardHand, HandType} from "../Hand";
 
 describe("Hand", () => {
     describe("calculate best hands", () => {
-        const expectHand = (cards: SevenCards, handType: HandType,
-                            highestRanks: Rank[] = []) => {
-            const bestHand = getBestFiveCardHand(cards);
-            expect(bestHand.type).to.equal(handType);
-            highestRanks.forEach(
-                (rank, i) => { expect(bestHand.ranks[i]).to.equal(rank); });
-        };
+        const expectHand =
+            (cards: Card[], handType: HandType, highestRanks: Rank[] = []) => {
+                const bestHand = getBestFiveCardHand(cards);
+                expect(bestHand.type).to.equal(handType);
+                highestRanks.forEach(
+                    (rank, i) => { expect(bestHand.ranks[i]).to.equal(rank); });
+            };
 
         it("RoyalFlush", () => {
             expectHand(
@@ -183,7 +183,7 @@ describe("Hand", () => {
 
     describe("compare best hands", () => {
         const expectCompareHands =
-            (c0: SevenCards, c1: SevenCards, expectedOrdering: number) => {
+            (c0: Card[], c1: Card[], expectedOrdering: number) => {
                 const h0 = getBestFiveCardHand(c0);
                 const h1 = getBestFiveCardHand(c1);
                 const actualOrdering = compareHands(h0, h1);

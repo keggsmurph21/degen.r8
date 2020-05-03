@@ -20,8 +20,7 @@ export enum HandType {
     RoyalFlush,
 }
 
-export type SevenCards = [Card, Card, Card, Card, Card, Card, Card];
-type BestHand = {
+export type BestHand = {
     readonly type: HandType,
     ranks: Rank[],
     pairs: Rank[],
@@ -155,7 +154,7 @@ function extractBestHand(pairs: Rank[], triples: Rank[], quadruples: Rank[],
     };
 }
 
-export function getBestFiveCardHand(cards: SevenCards): BestHand {
+export function getBestFiveCardHand(cards: Card[]): BestHand {
     debug(cards);
     // make maps of Suit => Rank[] and Rank => Suit[]
     const suits: {[_ in Suit]?: Rank[]} = {};

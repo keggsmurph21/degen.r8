@@ -1,4 +1,7 @@
+import {sortIntoTiers} from "../Utils";
+
 import {Card, getShuffledDeck} from "./Card";
+import {BestHand, compareHands, getBestFiveCardHand} from "./Hand";
 import {Player} from "./Player";
 
 const DEBUG = false;
@@ -11,7 +14,6 @@ interface PlayerState {
     player: Player;
     hasFolded: boolean;
     holeCards: readonly[Card, Card];
-    isDealer: boolean;
     amountBetThisRound: number;
 }
 
@@ -30,6 +32,33 @@ interface RoundParameters {
     anteBet: number;
 }
 
+interface ScorableHand {
+    player: Player, bestHand: BestHand,
+}
+
+function getScorableHands(playerStates: PlayerState[],
+                          communityCards: Card[]): ScorableHand[] {
+    return playerStates
+        .map(playerState => {
+            return {
+                player: playerState.player,
+                bestHand: playerState.hasFolded
+                              ? null
+                              : getBestFiveCardHand(communityCards.concat(
+                                    playerState.holeCards))
+            };
+        })
+        .filter(({player, bestHand}) => bestHand !== null);
+}
+
+export function getWinners(playerStates: PlayerState[],
+                           communityCards: Card[]): Player[] {
+    return sortIntoTiers(getScorableHands(playerStates, communityCards),
+                         (a, b) => compareHands(a.bestHand, b.bestHand))
+        .pop()
+        .map(h => h.player);
+}
+
 export class Round {
     private readonly playerStates: PlayerState[] = [];
     private deck: Card[] = getShuffledDeck();
@@ -45,7 +74,6 @@ export class Round {
                 player,
                 hasFolded: false,
                 holeCards: [this.deck.pop(), this.deck.pop()],
-                isDealer: i === 0,
                 amountBetThisRound: 0,
             });
             if (params.useAntes) {
@@ -152,7 +180,8 @@ export class Round {
             } else if (this.communityCards.length === 4) {
                 this.communityCards.push(this.deck.pop());
             } else if (this.communityCards.length === 5) {
-                throw new Error("Not implemented: choosing a winner");
+                this.doFinish(
+                    getWinners(this.playerStates, this.communityCards));
             }
         }
     }

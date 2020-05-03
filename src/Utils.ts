@@ -24,3 +24,30 @@ export function zip<T, U>(ts: T[], us: U[]): [T, U][] {
         ret.push([ts[i], us[i]]);
     return ret;
 }
+
+// Take an array and return an array of arrays, where each subarray contains
+// only elements that "compare" equal.  The subarrays are also guaranteed to be
+// ordered by the comparator.
+//
+// NB: The comparator should be commutative!
+export function sortIntoTiers<T>(ts: T[],
+                                 comparator: (t0: T, t1: T) => number): T[][] {
+    const sortedTs = ts.sort(comparator);
+    if (ts.length === 0)
+        return [];
+    let tiers = [];
+    let lastValue = sortedTs.shift();
+    let tier = [lastValue];
+    sortedTs.forEach(t => {
+        if (comparator(lastValue, t) === 0) {
+            tier.push(t);
+            lastValue = t;
+            return;
+        }
+        tiers.push(tier);
+        lastValue = t;
+        tier = [lastValue];
+    });
+    tiers.push(tier);
+    return tiers;
+}

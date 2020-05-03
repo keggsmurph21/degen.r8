@@ -1,7 +1,9 @@
-import { Player } from "./Player";
-import { InvalidStateError } from "./Errors";
+import {InvalidStateError} from "./Errors";
+import {Player} from "./Player";
 
-type Positions  = {[position: number]: Player | null};
+type Positions = {
+    [position: number]: Player|null
+};
 
 export const MIN_SIZE = 2;
 export const MAX_SIZE = 16;
@@ -13,9 +15,11 @@ export class Table {
 
     constructor(public readonly size: number) {
         if (size < MIN_SIZE)
-            throw new InvalidStateError(`Must have ${MIN_SIZE} or more players (got ${size})!`);
+            throw new InvalidStateError(
+                `Must have ${MIN_SIZE} or more players (got ${size})!`);
         if (size > MAX_SIZE)
-            throw new InvalidStateError(`Must have ${MAX_SIZE} or fewer players (got ${size})!`);
+            throw new InvalidStateError(
+                `Must have ${MAX_SIZE} or fewer players (got ${size})!`);
         for (let i = 0; i < size; ++i)
             this.byPosition[i] = null;
     }
@@ -34,11 +38,13 @@ export class Table {
 
     public addPlayer(playerToAdd: Player, position: number): void {
         if (!this.isValidIndex(position))
-            throw new InvalidStateError(`Index ${position} out of range (size = ${this.size})!`);
+            throw new InvalidStateError(
+                `Index ${position} out of range (size = ${this.size})!`);
         if (this.players.has(playerToAdd))
             throw new InvalidStateError(`This player is already at the Table!`);
         if (this.byPosition[position] !== null)
-            throw new InvalidStateError(`There is already a player at position ${position}!`);
+            throw new InvalidStateError(
+                `There is already a player at position ${position}!`);
         this.byPosition[position] = playerToAdd;
         this.players.add(playerToAdd);
     }
@@ -53,6 +59,7 @@ export class Table {
             this.byPosition[position] = null;
             return;
         }
-        throw new InvalidStateError(`Never found player while trying to remove :/`);
+        throw new InvalidStateError(
+            `Never found player while trying to remove :/`);
     }
 };

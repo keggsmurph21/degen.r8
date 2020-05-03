@@ -1,2 +1,2 @@
-import { install as enableSourceMaps } from "source-map-support";
+import {install as enableSourceMaps} from "source-map-support";
 enableSourceMaps();

@@ -1,4 +1,4 @@
-import { Card, forEachRank, forEachSuit, Rank, Suit } from "./Card";
+import {Card, forEachRank, forEachSuit, Rank, Suit} from "./Card";
 
 const DEBUG = false;
 function debug(...args) {
@@ -17,7 +17,7 @@ export enum HandType {
     FourOfAKind,
     StraightFlush,
     RoyalFlush,
-};
+}
 
 export type SevenCards = [Card, Card, Card, Card, Card, Card, Card];
 type BestHand = {
@@ -26,67 +26,77 @@ type BestHand = {
 };
 
 function extractBestHand(pairs: Rank[], triples: Rank[], quadruples: Rank[],
-        highestCards: Card[], straight: Rank[], flushSuit: Suit | null): BestHand {
-    const highestRanks = highestCards.map(({ suit, rank }) => rank);
+                         highestCards: Card[], straight: Rank[],
+                         flushSuit: Suit|null): BestHand {
+    const highestRanks = highestCards.map(({suit, rank}) => rank);
     const isStraight = straight.length >= 5;
     const isFlush = flushSuit !== null;
     straight = straight.slice(-5);
     // Actually determine the best hand
     if (isStraight && isFlush) {
         if (straight[straight.length - 1] === Rank.Ace)
-            return { type: HandType.RoyalFlush, ranks: straight };
-        return { type: HandType.StraightFlush, ranks: straight };
+            return {type: HandType.RoyalFlush, ranks: straight};
+        return {type: HandType.StraightFlush, ranks: straight};
     }
     if (quadruples.length) {
         const quadruple = quadruples[0]; // there can only be one
         const nonQuadruples = highestRanks.filter(rank => rank !== quadruple);
-        const ranks = [quadruple, quadruple, quadruple, quadruple, nonQuadruples.pop()].sort((a, b) => a - b);
-        return { type: HandType.FourOfAKind, ranks };
+        const ranks = [
+            quadruple, quadruple, quadruple, quadruple, nonQuadruples.pop()
+        ].sort((a, b) => a - b);
+        return {type: HandType.FourOfAKind, ranks};
     }
     if (triples.length && pairs.length) {
         const triple = Math.max(...triples);
         const pair = Math.max(...pairs);
-        const ranks = [triple, triple, triple, pair, pair].sort((a, b) => a - b);
-        return { type: HandType.FullHouse, ranks };
+        const ranks =
+            [triple, triple, triple, pair, pair].sort((a, b) => a - b);
+        return {type: HandType.FullHouse, ranks};
     }
     if (isFlush) {
-        const ranks = highestCards
-            .filter(({ suit, rank }) => suit === flushSuit)
-            .map(({ suit, rank }) => rank)
-            .slice(-5);
-        return { type: HandType.Flush, ranks };
+        const ranks = highestCards.filter(({suit, rank}) => suit === flushSuit)
+                          .map(({suit, rank}) => rank)
+                          .slice(-5);
+        return {type: HandType.Flush, ranks};
     }
     if (isStraight)
-        return { type: HandType.Straight, ranks: straight };
+        return {type: HandType.Straight, ranks: straight};
     if (triples.length) {
         const triple = Math.max(...triples);
         const nonTriples = highestRanks.filter(rank => rank !== triple);
-        const ranks = [triple, triple, triple, nonTriples.pop(), nonTriples.pop()].sort((a, b) => a - b);
-        return { type: HandType.ThreeOfAKind, ranks };
+        const ranks =
+            [triple, triple, triple, nonTriples.pop(), nonTriples.pop()].sort(
+                (a, b) => a - b);
+        return {type: HandType.ThreeOfAKind, ranks};
     }
     if (pairs.length > 1) {
         pairs = pairs.sort((a, b) => a - b);
         const firstPair = pairs.pop();
         const secondPair = pairs.pop();
-        const nonPairs = highestRanks.filter(rank => rank !== firstPair && rank !== secondPair);
-        const ranks = [firstPair, firstPair, secondPair, secondPair, nonPairs.pop()].sort((a, b) => a - b);
-        return { type: HandType.TwoPair, ranks };
+        const nonPairs = highestRanks.filter(rank => rank !== firstPair &&
+                                                     rank !== secondPair);
+        const ranks =
+            [firstPair, firstPair, secondPair, secondPair, nonPairs.pop()].sort(
+                (a, b) => a - b);
+        return {type: HandType.TwoPair, ranks};
     }
     if (pairs.length == 1) {
         const pair = Math.max(...pairs);
         const nonPairs = highestRanks.filter(rank => rank !== pair);
-        const ranks = [pair, pair, nonPairs.pop(), nonPairs.pop(), nonPairs.pop()].sort((a, b) => a - b);
-        return { type: HandType.Pair, ranks };
+        const ranks =
+            [pair, pair, nonPairs.pop(), nonPairs.pop(), nonPairs.pop()].sort(
+                (a, b) => a - b);
+        return {type: HandType.Pair, ranks};
     }
-    return { type: HandType.HighCard, ranks: highestRanks.slice(-5) };
+    return {type: HandType.HighCard, ranks: highestRanks.slice(-5)};
 }
 
 export function getBestFiveCardHand(cards: SevenCards): BestHand {
     debug(cards);
     // make maps of Suit => Rank[] and Rank => Suit[]
-    const suits: { [_ in Suit]?: Rank[] } = {};
-    const ranks: { [_ in Rank]?: Suit[] } = {};
-    cards.forEach(({ suit, rank }) => {
+    const suits: {[_ in Suit]?: Rank[]} = {};
+    const ranks: {[_ in Rank]?: Suit[]} = {};
+    cards.forEach(({suit, rank}) => {
         if (suits[suit] === undefined)
             suits[suit] = [];
         suits[suit].push(rank);
@@ -115,9 +125,7 @@ export function getBestFiveCardHand(cards: SevenCards): BestHand {
         if (suitsWithThisRank.length === 4)
             quadruples.push(rank);
         // check high cards
-        suitsWithThisRank.forEach(suit => {
-            highestCards.push({ suit, rank });
-        });
+        suitsWithThisRank.forEach(suit => { highestCards.push({suit, rank}); });
         // check for straight
         debug("(straight)", straight);
         if (straight.length === 0) {
@@ -133,6 +141,6 @@ export function getBestFiveCardHand(cards: SevenCards): BestHand {
         if (suits[suit] && suits[suit].length >= 5)
             flushSuit = suit;
     });
-    return extractBestHand(pairs, triples, quadruples, highestCards, straight, flushSuit);
+    return extractBestHand(pairs, triples, quadruples, highestCards, straight,
+                           flushSuit);
 }
-

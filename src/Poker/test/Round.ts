@@ -3,10 +3,10 @@ import "mocha";
 import {expect} from "chai";
 
 import {Card, Rank, Suit} from "../Card";
-import {Player} from "../Player";
 import {Bet, getWinners, Round} from "../Round";
 
 const MINIMUM_BET = 1.00;
+const STARTING_BALANCE = 20.00;
 const params = {
     minimumBet: MINIMUM_BET,
     useBlinds: true,
@@ -16,218 +16,222 @@ const params = {
     anteBet: MINIMUM_BET / 2,
 };
 
-const p0 = new Player();
-const p1 = new Player();
-const p2 = new Player();
-const p3 = new Player();
-
-expect(p0.getBalance()).to.equal(20);
-expect(p1.getBalance()).to.equal(20);
-expect(p2.getBalance()).to.equal(20);
-expect(p3.getBalance()).to.equal(20);
-
 describe("Round", () => {
     describe("make bets", () => {
-        it("track everyone folding", () => {
-            const round = new Round([p0, p1, p2, p3], params);
+        const getPlayers = num => {
+            let players = [];
+            for (let i = 0; i < num; ++i)
+                players.push({balance: STARTING_BALANCE});
+            return players;
+        };
+
+        it("blinds", () => {
+            const players = getPlayers(4);
+            const round = new Round(players, params);
             expect(round.getPot())
                 .to.equal(4 * params.anteBet + params.smallBlindBet +
                           params.bigBlindBet);
-            expect(p0.getBalance()).to.equal(20 - params.anteBet);
-            expect(p1.getBalance())
-                .to.equal(20 - params.anteBet - params.smallBlindBet);
-            expect(p2.getBalance())
-                .to.equal(20 - params.anteBet - params.bigBlindBet);
-            expect(p3.getBalance()).to.equal(20 - params.anteBet);
-            round.makeBet(p3, Bet.Fold);
-            round.makeBet(p0, Bet.Fold);
-            round.makeBet(p1, Bet.Fold);
-            expect(round.isFinished).to.be.true;
-            expect(p2.getBalance()).to.equal(22);
-            expect(p3.getBalance()).to.equal(19.5);
-            expect(p0.getBalance()).to.equal(19.5);
-            expect(p1.getBalance()).to.equal(19);
+            expect(players[0].balance)
+                .to.equal(STARTING_BALANCE - params.anteBet);
+            expect(players[1].balance)
+                .to.equal(STARTING_BALANCE - params.anteBet -
+                          params.smallBlindBet);
+            expect(players[2].balance)
+                .to.equal(STARTING_BALANCE - params.anteBet -
+                          params.bigBlindBet);
+            expect(players[3].balance)
+                .to.equal(STARTING_BALANCE - params.anteBet);
         });
 
-        it("track everyone calling & folding", () => {
-            const round = new Round([p1, p2, p3, p0], params);
-            expect(p1.getBalance()).to.equal(19 - params.anteBet);
-            expect(p2.getBalance())
-                .to.equal(22 - params.anteBet - params.smallBlindBet);
-            expect(p3.getBalance())
-                .to.equal(19.5 - params.anteBet - params.bigBlindBet);
-            expect(p0.getBalance()).to.equal(19.5 - params.anteBet);
-            round.makeBet(p0, Bet.Call);
-            expect(p0.getBalance()).to.equal(18);
-            expect(round.getPot()).to.equal(4.5);
-            round.makeBet(p1, Bet.Call);
-            expect(p1.getBalance()).to.equal(17.5);
-            expect(round.getPot()).to.equal(5.5);
-            round.makeBet(p2, Bet.Call);
-            expect(p2.getBalance()).to.equal(20.5);
-            expect(round.getPot()).to.equal(6);
-            round.makeBet(p3, Bet.Call);
-            expect(p3.getBalance()).to.equal(18);
-            expect(round.getPot()).to.equal(6);
-            expect(round.getCommunityCards().length).to.equal(3);
-            round.makeBet(p0, Bet.Fold);
-            round.makeBet(p1, Bet.Fold);
-            round.makeBet(p2, Bet.Fold);
+        it("everyone folding after blinds", () => {
+            const players = getPlayers(4);
+            const round = new Round(players, params);
+            round.makeBet(players[3], Bet.Fold);
+            round.makeBet(players[0], Bet.Fold);
+            round.makeBet(players[1], Bet.Fold);
             expect(round.isFinished).to.be.true;
-            expect(p3.getBalance()).to.equal(24);
-            expect(p0.getBalance()).to.equal(18);
-            expect(p1.getBalance()).to.equal(17.5);
-            expect(p2.getBalance()).to.equal(20.5);
+            expect(round.getPot()).to.equal(0);
+            expect(players[0].balance)
+                .to.equal(STARTING_BALANCE - params.anteBet);
+            expect(players[1].balance)
+                .to.equal(STARTING_BALANCE - params.anteBet -
+                          params.smallBlindBet);
+            expect(players[2].balance)
+                .to.equal(STARTING_BALANCE - params.anteBet -
+                          params.bigBlindBet + 4 * params.anteBet +
+                          params.smallBlindBet + params.bigBlindBet);
+            expect(players[3].balance)
+                .to.equal(STARTING_BALANCE - params.anteBet);
         });
 
-        it("track everyone calling & calling & folding", () => {
-            const round = new Round([p2, p3, p0, p1], params);
-            expect(p2.getBalance()).to.equal(20.5 - params.anteBet);
-            expect(p3.getBalance())
-                .to.equal(24 - params.anteBet - params.smallBlindBet);
-            expect(p0.getBalance())
-                .to.equal(18 - params.anteBet - params.bigBlindBet);
-            expect(p1.getBalance()).to.equal(17.5 - params.anteBet);
-            round.makeBet(p1, Bet.Call);
-            expect(p1.getBalance()).to.equal(16);
-            round.makeBet(p2, Bet.Call);
-            expect(p2.getBalance()).to.equal(19);
-            round.makeBet(p3, Bet.Call);
-            expect(p3.getBalance()).to.equal(22.5);
-            round.makeBet(p0, Bet.Call);
-            expect(p0.getBalance()).to.equal(16.5);
+        it("everyone calling first round, then folding", () => {
+            const players = getPlayers(4);
+            const round = new Round(players, params);
+            round.makeBet(players[3], Bet.Call);
+            round.makeBet(players[0], Bet.Call);
+            expect(round.getCommunityCards().length).to.equal(0);
+            round.makeBet(players[1], Bet.Call);
             expect(round.getCommunityCards().length).to.equal(3);
-            round.makeBet(p1, Bet.Call);
-            expect(p1.getBalance()).to.equal(16)
-            round.makeBet(p2, Bet.Call);
-            expect(p2.getBalance()).to.equal(19);
-            round.makeBet(p3, Bet.Call);
-            expect(p3.getBalance()).to.equal(22.5);
-            round.makeBet(p0, Bet.Call);
-            expect(p0.getBalance()).to.equal(16.5);
+            round.makeBet(players[2], Bet.Call);
+            round.makeBet(players[3], Bet.Fold);
+            round.makeBet(players[0], Bet.Fold);
+            round.makeBet(players[1], Bet.Fold);
+            expect(round.isFinished).to.be.true;
+            expect(players[0].balance)
+                .to.equal(STARTING_BALANCE - params.anteBet -
+                          params.bigBlindBet);
+            expect(players[1].balance)
+                .to.equal(STARTING_BALANCE - params.anteBet -
+                          params.bigBlindBet);
+            expect(players[2].balance)
+                .to.equal(STARTING_BALANCE - params.anteBet -
+                          params.bigBlindBet + 4 * params.anteBet +
+                          4 * params.bigBlindBet);
+            expect(players[3].balance)
+                .to.equal(STARTING_BALANCE - params.anteBet -
+                          params.bigBlindBet);
+        });
+
+        it("everyone calling first two rounds, then folding", () => {
+            const players = getPlayers(4);
+            const round = new Round(players, params);
+            round.makeBet(players[3], Bet.Call);
+            round.makeBet(players[0], Bet.Call);
+            round.makeBet(players[1], Bet.Call);
+            round.makeBet(players[2], Bet.Call);
+            round.makeBet(players[3], Bet.Call);
+            round.makeBet(players[0], Bet.Call);
+            expect(round.getCommunityCards().length).to.equal(3);
+            round.makeBet(players[1], Bet.Call);
             expect(round.getCommunityCards().length).to.equal(4);
-            round.makeBet(p1, Bet.Fold);
-            round.makeBet(p2, Bet.Fold);
-            round.makeBet(p3, Bet.Fold);
+            round.makeBet(players[2], Bet.Call);
+            round.makeBet(players[3], Bet.Fold);
+            round.makeBet(players[0], Bet.Fold);
+            round.makeBet(players[1], Bet.Fold);
             expect(round.isFinished).to.be.true;
-            expect(p0.getBalance()).to.equal(22.5);
-            expect(p1.getBalance()).to.equal(16);
-            expect(p2.getBalance()).to.equal(19);
-            expect(p3.getBalance()).to.equal(22.5);
+            expect(players[0].balance)
+                .to.equal(STARTING_BALANCE - params.anteBet -
+                          params.bigBlindBet);
+            expect(players[1].balance)
+                .to.equal(STARTING_BALANCE - params.anteBet -
+                          params.bigBlindBet);
+            expect(players[2].balance)
+                .to.equal(STARTING_BALANCE - params.anteBet -
+                          params.bigBlindBet + 4 * params.anteBet +
+                          4 * params.bigBlindBet);
+            expect(players[3].balance)
+                .to.equal(STARTING_BALANCE - params.anteBet -
+                          params.bigBlindBet);
         });
 
-        it("track everyone calling & calling & calling & folding", () => {
-            const round = new Round([p3, p0, p1, p2], params);
-            expect(p3.getBalance()).to.equal(22.5 - params.anteBet);
-            expect(p0.getBalance())
-                .to.equal(22.5 - params.anteBet - params.smallBlindBet);
-            expect(p1.getBalance())
-                .to.equal(16 - params.anteBet - params.bigBlindBet);
-            expect(p2.getBalance()).to.equal(19 - params.anteBet);
-            round.makeBet(p2, Bet.Call);
-            expect(p2.getBalance()).to.equal(17.5);
-            round.makeBet(p3, Bet.Call);
-            expect(p3.getBalance()).to.equal(21);
-            round.makeBet(p0, Bet.Call);
-            expect(p0.getBalance()).to.equal(21);
-            round.makeBet(p1, Bet.Call);
-            expect(p1.getBalance()).to.equal(14.5);
-            expect(round.getCommunityCards().length).to.equal(3);
-            round.makeBet(p2, Bet.Call);
-            round.makeBet(p3, Bet.Call);
-            round.makeBet(p0, Bet.Call);
-            round.makeBet(p1, Bet.Call);
+        it("everyone calling first three rounds, then folding", () => {
+            const players = getPlayers(4);
+            const round = new Round(players, params);
+            round.makeBet(players[3], Bet.Call);
+            round.makeBet(players[0], Bet.Call);
+            round.makeBet(players[1], Bet.Call);
+            round.makeBet(players[2], Bet.Call);
+            round.makeBet(players[3], Bet.Call);
+            round.makeBet(players[0], Bet.Call);
+            round.makeBet(players[1], Bet.Call);
+            round.makeBet(players[2], Bet.Call);
+            round.makeBet(players[3], Bet.Call);
+            round.makeBet(players[0], Bet.Call);
             expect(round.getCommunityCards().length).to.equal(4);
-            round.makeBet(p2, Bet.Call);
-            round.makeBet(p3, Bet.Call);
-            round.makeBet(p0, Bet.Call);
-            round.makeBet(p1, Bet.Call);
+            round.makeBet(players[1], Bet.Call);
             expect(round.getCommunityCards().length).to.equal(5);
-            round.makeBet(p2, Bet.Fold);
-            round.makeBet(p3, Bet.Fold);
-            round.makeBet(p0, Bet.Fold);
+            round.makeBet(players[2], Bet.Call);
+            round.makeBet(players[3], Bet.Fold);
+            round.makeBet(players[0], Bet.Fold);
+            round.makeBet(players[1], Bet.Fold);
             expect(round.isFinished).to.be.true;
-            expect(p1.getBalance()).to.equal(20.5);
-            expect(p2.getBalance()).to.equal(17.5);
-            expect(p3.getBalance()).to.equal(21);
-            expect(p0.getBalance()).to.equal(21);
+            expect(players[0].balance)
+                .to.equal(STARTING_BALANCE - params.anteBet -
+                          params.bigBlindBet);
+            expect(players[1].balance)
+                .to.equal(STARTING_BALANCE - params.anteBet -
+                          params.bigBlindBet);
+            expect(players[2].balance)
+                .to.equal(STARTING_BALANCE - params.anteBet -
+                          params.bigBlindBet + 4 * params.anteBet +
+                          4 * params.bigBlindBet);
+            expect(players[3].balance)
+                .to.equal(STARTING_BALANCE - params.anteBet -
+                          params.bigBlindBet);
         });
 
-        it("track everyone calling / folding", () => {
-            const round = new Round([p0, p1, p2, p3], params);
-            expect(p0.getBalance()).to.equal(21 - params.anteBet);
-            expect(p1.getBalance())
-                .to.equal(20.5 - params.anteBet - params.smallBlindBet);
-            expect(p2.getBalance())
-                .to.equal(17.5 - params.anteBet - params.bigBlindBet);
-            expect(p3.getBalance()).to.equal(21 - params.anteBet);
-            round.makeBet(p3, Bet.Fold);
-            round.makeBet(p0, Bet.Fold);
-            round.makeBet(p1, Bet.Call);
-            expect(p1.getBalance()).to.equal(19);
-            round.makeBet(p2, Bet.Call);
-            expect(p2.getBalance()).to.equal(16);
-            expect(round.getPot()).to.equal(4);
-            expect(round.getCommunityCards().length).to.equal(3);
-            round.makeBet(p1, Bet.Fold);
+        it("two players folding, small blind calling then folding", () => {
+            const players = getPlayers(4);
+            const round = new Round(players, params);
+            round.makeBet(players[3], Bet.Fold);
+            round.makeBet(players[0], Bet.Fold);
+            round.makeBet(players[1], Bet.Call);
+            round.makeBet(players[2], Bet.Call);
+            expect(round.getPot())
+                .to.equal(4 * params.anteBet + 2 * params.bigBlindBet);
+            round.makeBet(players[1], Bet.Fold);
             expect(round.isFinished).to.be.true;
-            expect(p0.getBalance()).to.equal(20.5);
-            expect(p1.getBalance()).to.equal(19);
-            expect(p2.getBalance()).to.equal(20);
-            expect(p3.getBalance()).to.equal(20.5);
+            expect(players[0].balance)
+                .to.equal(STARTING_BALANCE - params.anteBet);
+            expect(players[1].balance)
+                .to.equal(STARTING_BALANCE - params.anteBet -
+                          params.bigBlindBet);
+            expect(players[2].balance)
+                .to.equal(STARTING_BALANCE - params.anteBet -
+                          params.bigBlindBet + 4 * params.anteBet +
+                          2 * params.bigBlindBet);
+            expect(players[3].balance)
+                .to.equal(STARTING_BALANCE - params.anteBet);
         });
 
-        it("track everyone raising", () => {
-            const round = new Round([p1, p2, p3, p0], params);
-            expect(p1.getBalance()).to.equal(19 - params.anteBet);
-            expect(p2.getBalance())
-                .to.equal(20 - params.anteBet - params.smallBlindBet);
-            expect(p3.getBalance())
-                .to.equal(20.5 - params.anteBet - params.bigBlindBet);
-            expect(p0.getBalance()).to.equal(20.5 - params.anteBet);
-            expect(() => round.makeBet(p0, Bet.Raise, -1)).to.throw();
-            expect(() => round.makeBet(p0, Bet.Raise, 1)).to.throw();
-            round.makeBet(p0, Bet.Raise, 1.5);
-            expect(() => round.makeBet(p1, Bet.Raise, 1.5)).to.throw();
-            round.makeBet(p1, Bet.Raise, 2);
-            expect(() => round.makeBet(p2, Bet.Raise, 1.5)).to.throw();
-            round.makeBet(p2, Bet.Raise, 2);
-            round.makeBet(p3, Bet.Call);
-            round.makeBet(p0, Bet.Call);
-            round.makeBet(p1, Bet.Call);
+        it("one player raising", () => {
+            const players = getPlayers(4);
+            const round = new Round(players, params);
+            let currentBet = params.bigBlindBet;
+            let raiseBy = 0.01;
+            expect(round.getCurrentBet()).to.equal(currentBet);
+            expect(() => round.makeBet(players[3], Bet.Raise, -1)).to.throw();
+            expect(() => round.makeBet(players[3], Bet.Raise, 0)).to.throw();
+            expect(() => round.makeBet(players[3], Bet.Raise, STARTING_BALANCE))
+                .to.throw();
+            round.makeBet(players[3], Bet.Raise, raiseBy);
+            currentBet += raiseBy;
+            expect(round.getCurrentBet()).to.equal(currentBet);
+        });
+
+        it("three players raising", () => {
+            const players = getPlayers(4);
+            const round = new Round(players, params);
+            let currentBet = params.bigBlindBet;
+            let raiseBy = 0.5;
+            // p3 raises
+            round.makeBet(players[3], Bet.Raise, raiseBy);
+            currentBet += raiseBy;
+            expect(round.getCurrentBet()).to.equal(currentBet);
+            // p0 raises
+            round.makeBet(players[0], Bet.Raise, raiseBy);
+            currentBet += raiseBy;
+            expect(round.getCurrentBet()).to.equal(currentBet);
+            // p1 raises
+            round.makeBet(players[1], Bet.Raise, raiseBy);
+            currentBet += raiseBy;
+            expect(round.getCurrentBet()).to.equal(currentBet);
+            round.makeBet(players[2], Bet.Call);
+            round.makeBet(players[3], Bet.Call);
+            expect(round.getCommunityCards().length).to.equal(0);
+            round.makeBet(players[0], Bet.Call);
+            players.forEach(p => expect(p.balance).to.equal(STARTING_BALANCE -
+                                                            params.anteBet -
+                                                            currentBet));
             expect(round.getCommunityCards().length).to.equal(3);
-            expect(round.getPot())
-                .to.equal((params.anteBet + params.smallBlindBet + 2) * 4);
-            round.makeBet(p2, Bet.Call);
-            round.makeBet(p3, Bet.Call);
-            round.makeBet(p0, Bet.Raise, 0.5);
-            round.makeBet(p1, Bet.Call);
-            round.makeBet(p2, Bet.Call);
-            round.makeBet(p3, Bet.Call);
-            expect(round.getPot())
-                .to.equal((params.anteBet + params.smallBlindBet + 2.5) * 4);
-            expect(round.getCommunityCards().length).to.equal(4);
-            round.makeBet(p0, Bet.Raise, 0.5);
-            round.makeBet(p1, Bet.Call);
-            round.makeBet(p2, Bet.Call);
-            round.makeBet(p3, Bet.Raise, 1);
-            expect(round.getPot())
-                .to.equal((params.anteBet + params.smallBlindBet + 2.5) * 4 +
-                          2.5);
-            round.makeBet(p0, Bet.Fold);
-            round.makeBet(p1, Bet.Fold);
-            round.makeBet(p2, Bet.Fold);
-            expect(p1.getBalance()).to.equal(15);
-            expect(p2.getBalance()).to.equal(16);
-            expect(p3.getBalance()).to.equal(32.5);
-            expect(p0.getBalance()).to.equal(16.5);
+            expect(round.getPot()).to.equal(4 * (params.anteBet + currentBet));
         });
     });
 
     describe("get winners", () => {
         const getPlayerState = (holeCards: [Card, Card]) => {
             return {
-                player: new Player(),
+                player: {balance: STARTING_BALANCE},
                 hasFolded: false,
                 holeCards,
                 amountBetThisRound: 1.0,

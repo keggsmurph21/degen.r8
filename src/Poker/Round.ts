@@ -69,40 +69,31 @@ export class Round {
     private didLastRaise: Player;
     public isFinished: boolean = false;
     constructor(players: Player[], params: RoundParameters) {
-        players.forEach((player, i) => {
+        players.forEach(player => {
             this.playerStates.push({
                 player,
                 hasFolded: false,
                 holeCards: [this.deck.pop(), this.deck.pop()],
                 amountBetThisRound: 0,
             });
-            if (params.useAntes) {
-                player.decrementBalance(
-                    params.anteBet); // NB: Doesn't affect current bet
-                this.pot += params.anteBet;
-            }
+            if (params.useAntes)
+                this.commitBet(this.playerStates[this.playerStates.length - 1],
+                               params.anteBet, false);
         });
+        this.didLastRaise = this.playerStates[0].player;
         if (params.useBlinds) {
-            this.playerStates[1].player.decrementBalance(params.smallBlindBet);
-            this.playerStates[1].amountBetThisRound = params.smallBlindBet;
-            this.currentBet = params.smallBlindBet;
-            this.pot += params.smallBlindBet;
-            this.playerStates[2].player.decrementBalance(params.bigBlindBet);
-            this.playerStates[2].amountBetThisRound = params.bigBlindBet;
-            this.currentBet = params.bigBlindBet;
-            this.pot += params.bigBlindBet;
-            this.didLastRaise = this.playerStates[2].player;
+            this.commitBet(this.playerStates[1], params.smallBlindBet);
+            this.commitBet(this.playerStates[2], params.bigBlindBet);
             this.currentIndex = 3;
             if (this.currentIndex >= this.playerStates.length)
                 this.currentIndex -= this.playerStates.length;
-        } else {
-            this.didLastRaise = this.playerStates[0].player;
         }
     }
     public getPot(): number { return this.pot; }
     public getCommunityCards(): ReadonlyArray<Card> {
         return this.communityCards;
     }
+    public getCurrentBet(): number { return this.currentBet; }
     public getStateFor(player: Player): Readonly<PlayerState>|null {
         for (let i = 0; i < this.playerStates.length; ++i) {
             if (this.playerStates[i].player === player)
@@ -110,8 +101,20 @@ export class Round {
         }
         return null;
     }
-    public makeBet(player: Player, bet: Bet,
-                   requestedRaiseAmount: number = 0): void {
+    private commitBet(playerState: PlayerState, amount: number,
+                      affectsRoundTotals: boolean = true): void {
+        if (playerState.player.balance < amount)
+            throw new Error("FIXME: need to make another pot");
+        playerState.player.balance -= amount;
+        if (affectsRoundTotals) {
+            playerState.amountBetThisRound += amount;
+            if (this.currentBet < playerState.amountBetThisRound)
+                this.didLastRaise = playerState.player;
+        }
+        this.currentBet = playerState.amountBetThisRound;
+        this.pot += amount;
+    }
+    public makeBet(player: Player, bet: Bet, raiseBy: number = 0): void {
         if (this.isFinished)
             throw new Error("Round is over!");
         const currentPlayerState = this.playerStates[this.currentIndex];
@@ -122,34 +125,12 @@ export class Round {
             throw new Error("This is not the current player!");
         switch (bet) {
         case Bet.Call:
-            if (callAmount > currentPlayer.getBalance())
-                throw new Error("FIXME: need to make another pot");
-            currentPlayer.decrementBalance(callAmount);
-            currentPlayerState.amountBetThisRound += callAmount;
-            this.pot += callAmount;
+            this.commitBet(currentPlayerState, callAmount);
             break;
         case Bet.Raise:
-            const raiseAmount = requestedRaiseAmount -
-                                callAmount; // Actual amount we're "raising" by
-            if (raiseAmount <= 0)
-                throw new Error(`You must raise by more than ${callAmount}!`);
-            if (!currentPlayer.canAfford(raiseAmount))
-                throw new Error(`You can only raise by (at most) ${
-                    currentPlayer.getBalance() - callAmount}!`);
-            debug(this.currentIndex, "callAmount", callAmount,
-                  "requestedRaiseAmount", requestedRaiseAmount, "raiseAmount",
-                  raiseAmount);
-            debug(" => amountBetThisRound",
-                  currentPlayerState.amountBetThisRound, "currentBet",
-                  this.currentBet, "pot", this.pot);
-            currentPlayer.decrementBalance(requestedRaiseAmount);
-            currentPlayerState.amountBetThisRound += requestedRaiseAmount;
-            this.currentBet += raiseAmount;
-            this.pot += requestedRaiseAmount;
-            this.didLastRaise = currentPlayer;
-            debug(" => amountBetThisRound",
-                  currentPlayerState.amountBetThisRound, "currentBet",
-                  this.currentBet, "pot", this.pot);
+            if (raiseBy <= 0)
+                throw new Error(`You must raise by a positive number!`);
+            this.commitBet(currentPlayerState, callAmount + raiseBy);
             break;
         case Bet.Fold:
             currentPlayerState.hasFolded = true;
@@ -188,7 +169,8 @@ export class Round {
     private doFinish(winners: Player[]): void {
         if (winners.length !== 1)
             throw new Error("Not implemented: multiple winners");
-        winners[0].incrementBalance(this.pot);
+        winners[0].balance += this.pot;
+        this.pot = 0;
         this.isFinished = true;
     }
     public dump(): void {

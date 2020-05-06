@@ -1,6 +1,6 @@
 import {sortIntoTiers} from "../Utils";
 
-import {Card, getShuffledDeck} from "./Card";
+import {Card} from "./Card";
 import {BestHand, compareHands, getBestFiveCardHand} from "./Hand";
 import {Player} from "./Player";
 
@@ -92,7 +92,7 @@ function commitToPot(pot: Pot, ps: PlayerState, balance: number): number {
 
 export class Round {
     private readonly playerStates: PlayerState[] = [];
-    private deck: Card[] = getShuffledDeck();
+    private deck: Card[];
     private currentIndex: number = 0;
     private communityCards: Card[] = [];
     private currentBet: number = 0;
@@ -100,7 +100,8 @@ export class Round {
     private didLastRaise: Player;
     private anteBet: number = 0;
     public isFinished: boolean = false;
-    constructor(players: Player[], params: RoundParameters) {
+    constructor(deck: Card[], players: Player[], params: RoundParameters) {
+        this.deck = deck;
         players.forEach((player, i) => {
             this.playerStates.push({
                 index: i,

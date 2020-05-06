@@ -2,7 +2,7 @@ import "mocha";
 
 import {expect} from "chai";
 
-import {Card, Rank, Suit} from "../Card";
+import {Card, getShuffledDeck, Rank, Suit} from "../Card";
 import {Bet, getWinners, Round} from "../Round";
 
 const MINIMUM_BET = 1.00;
@@ -27,7 +27,7 @@ describe("Round", () => {
 
         it("blinds", () => {
             const players = getPlayers(4);
-            const round = new Round(players, params);
+            const round = new Round(getShuffledDeck(), players, params);
             expect(round.getPots()).to.deep.equal([{
                 maxCumulativeBet: STARTING_BALANCE,
                 maxMarginalBet: STARTING_BALANCE,
@@ -54,7 +54,7 @@ describe("Round", () => {
 
         it("everyone folding after blinds", () => {
             const players = getPlayers(4);
-            const round = new Round(players, params);
+            const round = new Round(getShuffledDeck(), players, params);
             round.makeBet(players[3], Bet.Fold);
             round.makeBet(players[0], Bet.Fold);
             round.makeBet(players[1], Bet.Fold);
@@ -84,7 +84,7 @@ describe("Round", () => {
 
         it("everyone calling first round, then folding", () => {
             const players = getPlayers(4);
-            const round = new Round(players, params);
+            const round = new Round(getShuffledDeck(), players, params);
             round.makeBet(players[3], Bet.Call);
             expect(round.getPots()).to.deep.equal([{
                 maxCumulativeBet: STARTING_BALANCE,
@@ -144,7 +144,7 @@ describe("Round", () => {
 
         it("everyone calling first two rounds, then folding", () => {
             const players = getPlayers(4);
-            const round = new Round(players, params);
+            const round = new Round(getShuffledDeck(), players, params);
             round.makeBet(players[3], Bet.Call);
             round.makeBet(players[0], Bet.Call);
             round.makeBet(players[1], Bet.Call);
@@ -176,7 +176,7 @@ describe("Round", () => {
 
         it("everyone calling first three rounds, then folding", () => {
             const players = getPlayers(4);
-            const round = new Round(players, params);
+            const round = new Round(getShuffledDeck(), players, params);
             round.makeBet(players[3], Bet.Call);
             round.makeBet(players[0], Bet.Call);
             round.makeBet(players[1], Bet.Call);
@@ -223,7 +223,7 @@ describe("Round", () => {
 
         it("two players folding, small blind calling then folding", () => {
             const players = getPlayers(4);
-            const round = new Round(players, params);
+            const round = new Round(getShuffledDeck(), players, params);
             round.makeBet(players[3], Bet.Fold);
             round.makeBet(players[0], Bet.Fold);
             round.makeBet(players[1], Bet.Call);
@@ -256,7 +256,7 @@ describe("Round", () => {
 
         it("one player raising", () => {
             const players = getPlayers(4);
-            const round = new Round(players, params);
+            const round = new Round(getShuffledDeck(), players, params);
             let currentBet = params.anteBet + params.bigBlindBet;
             let raiseBy = 0.01;
             expect(round.getCurrentBet()).to.equal(currentBet);
@@ -282,7 +282,7 @@ describe("Round", () => {
 
         it("three players raising", () => {
             const players = getPlayers(4);
-            const round = new Round(players, params);
+            const round = new Round(getShuffledDeck(), players, params);
             let currentBet = params.anteBet + params.bigBlindBet;
             let raiseBy = 0.5;
             // p3 raises
@@ -354,7 +354,7 @@ describe("Round", () => {
         it("raising by an amount no one can afford", () => {
             const players = getPlayers(4);
             players[3].balance = 3 * STARTING_BALANCE;
-            const round = new Round(players, params);
+            const round = new Round(getShuffledDeck(), players, params);
             expect(() => round.makeBet(players[3], Bet.Raise, STARTING_BALANCE))
                 .to.throw();
         });
@@ -362,7 +362,7 @@ describe("Round", () => {
         describe("side pots", () => {
             it("normal betting", () => {
                 const players = getPlayers(4);
-                const round = new Round(players, params);
+                const round = new Round(getShuffledDeck(), players, params);
                 let currentBet = params.anteBet + params.bigBlindBet;
                 let raiseBy = 0.5;
                 expect(round.getPots()).to.deep.equal([{
@@ -433,7 +433,7 @@ describe("Round", () => {
                 players[0].balance = 2 * STARTING_BALANCE;
                 players[1].balance = 2 * STARTING_BALANCE;
                 players[2].balance = STARTING_BALANCE;
-                const round = new Round(players, params);
+                const round = new Round(getShuffledDeck(), players, params);
                 expect(round.getPots()).to.deep.equal([{
                     maxCumulativeBet: STARTING_BALANCE,
                     maxMarginalBet: STARTING_BALANCE,
@@ -503,7 +503,7 @@ describe("Round", () => {
                 players[0].balance = 2 * STARTING_BALANCE;
                 players[1].balance = 2 * STARTING_BALANCE;
                 players[2].balance = STARTING_BALANCE;
-                const round = new Round(players, params);
+                const round = new Round(getShuffledDeck(), players, params);
                 round.makeBet(players[0], Bet.Raise, STARTING_BALANCE);
                 round.makeBet(players[1], Bet.Call);
                 round.makeBet(players[2], Bet.Call);
@@ -558,7 +558,7 @@ describe("Round", () => {
                 players[0].balance = 2 * STARTING_BALANCE;
                 players[1].balance = 2 * STARTING_BALANCE;
                 players[2].balance = STARTING_BALANCE;
-                const round = new Round(players, params);
+                const round = new Round(getShuffledDeck(), players, params);
                 round.makeBet(players[0], Bet.Raise, STARTING_BALANCE);
                 round.makeBet(players[1], Bet.Call);
                 round.makeBet(players[2], Bet.Call);

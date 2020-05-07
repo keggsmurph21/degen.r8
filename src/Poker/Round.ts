@@ -25,7 +25,7 @@ export enum Bet {
     Fold,
 }
 
-interface RoundParameters {
+export interface RoundParameters {
     minimumBet: number;
     useBlinds: boolean;
     bigBlindBet: number;

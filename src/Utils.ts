@@ -1,6 +1,5 @@
+// Implementation of Fisher-Yates / Knuth shuffle.  Shuffles an array in-place.
 export function shuffled<T>(arr: T[]): T[] {
-    // Implementation of Fisher-Yates / Knuth shuffle.  Shuffles
-    // an array in-place.
     for (let i = arr.length; i > 0;) {
         let j = Math.floor(Math.random() * i);
         --i;
@@ -50,4 +49,8 @@ export function sortIntoTiers<T>(ts: T[],
     });
     tiers.push(tier);
     return tiers;
+}
+
+export function clamp(min: number, value: number, max: number): number {
+    return Math.min(max, Math.max(min, value));
 }

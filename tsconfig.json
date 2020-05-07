@@ -8,7 +8,7 @@
         "removeComments": true,
         "rootDir": "src",
         "target": "ES3",
-        "lib": ["es2017", "dom"],
+        "lib": ["ESNext", "dom"],
         "experimentalDecorators": true,
         "sourceMap": true,
         "sourceRoot": "/public/js"

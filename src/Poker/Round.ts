@@ -35,7 +35,7 @@ interface RoundParameters {
 }
 
 interface ScorableHand {
-    player: Player, bestHand: BestHand,
+    playerState: PlayerState, bestHand: BestHand,
 }
 
 function getScorableHands(playerStates: PlayerState[],
@@ -43,22 +43,22 @@ function getScorableHands(playerStates: PlayerState[],
     return playerStates
         .map(ps => {
             return {
-                player: ps.player,
+                playerState: ps,
                 bestHand: ps.hasFolded
                               ? null
                               : getBestFiveCardHand(
                                     communityCards.concat(ps.holeCards))
             };
         })
-        .filter(({player, bestHand}) => bestHand !== null);
+        .filter(({playerState, bestHand}) => bestHand !== null);
 }
 
 export function getWinners(playerStates: PlayerState[],
-                           communityCards: Card[]): Player[] {
+                           communityCards: Card[]): PlayerState[] {
     return sortIntoTiers(getScorableHands(playerStates, communityCards),
                          (a, b) => compareHands(a.bestHand, b.bestHand))
         .pop()
-        .map(h => h.player);
+        .map(h => h.playerState);
 }
 
 interface Pot {
@@ -75,19 +75,18 @@ function commitToPot(pot: Pot, ps: PlayerState, balance: number): number {
     const maxCommitment = pot.maxMarginalBet - pot.contributions[index];
     if (maxCommitment === 0)
         return 0;
-    const marginalContribution = Math.min(maxCommitment, balance);
-    const cumulativeContribution =
-        pot.contributions[index] + marginalContribution;
+    const marginalContrib = Math.min(maxCommitment, balance);
+    const cumulativeContrib = pot.contributions[index] + marginalContrib;
     debug("maxCommitment", maxCommitment);
     debug("marginalBet", pot.marginalBet);
     debug("uncommitted", balance);
-    debug("committing", marginalContribution);
+    debug("committing", marginalContrib);
     debug("alreadyCommitted", pot.contributions[index]);
-    debug("commitment", cumulativeContribution);
-    if (pot.marginalBet < cumulativeContribution)
-        pot.marginalBet = cumulativeContribution;
-    pot.contributions[index] += marginalContribution;
-    return balance - marginalContribution;
+    debug("commitment", cumulativeContrib);
+    if (pot.marginalBet < cumulativeContrib)
+        pot.marginalBet = cumulativeContrib;
+    pot.contributions[index] += marginalContrib;
+    return balance - marginalContrib;
 }
 
 export class Round {
@@ -212,8 +211,8 @@ export class Round {
             if (playersThatCanAfford.length === 0)
                 throw new Error("This shouldn't happen!");
             const playerToRefund = playersThatCanAfford[0];
-            playerToRefund.player.balance += pot.contributions.reduce(
-                (acc, contribution) => acc += contribution, 0);
+            playerToRefund.player.balance +=
+                pot.contributions.reduce((acc, contrib) => acc += contrib, 0);
             return false;
         })
         debug("post-filter", this.pots);
@@ -248,13 +247,13 @@ export class Round {
             break;
         case Bet.Fold:
             currentPlayerState.hasFolded = true;
+            this.filterPots();
             const nonFoldedPlayers =
                 this.playerStates.filter(ps => !ps.hasFolded);
             if (nonFoldedPlayers.length == 1) {
-                this.doFinish([nonFoldedPlayers[0].player]);
+                this.doFinish();
                 return;
             }
-            this.filterPots();
             break;
         }
         do {
@@ -273,17 +272,26 @@ export class Round {
             } else if (this.communityCards.length === 4) {
                 this.communityCards.push(this.deck.pop());
             } else if (this.communityCards.length === 5) {
-                this.doFinish(
-                    getWinners(this.playerStates, this.communityCards));
+                this.doFinish();
             }
         }
     }
-    private doFinish(winners: Player[]): void {
-        if (winners.length !== 1)
-            throw new Error("Not implemented: multiple winners");
-        if (this.pots.length !== 1)
-            throw new Error("Not implemented: winning with side pots");
-        winners[0].balance += this.getPot();
+    private doFinish(): void {
+        this.pots.forEach(pot => {
+            const candidates = pot.contributions
+                                   .map((contrib, index) => {
+                                       if (contrib === 0)
+                                           return null;
+                                       return this.playerStates[index];
+                                   })
+                                   .filter(ps => ps !== null);
+            const potBalance =
+                pot.contributions.reduce((acc, contrib) => acc += contrib, 0);
+            getWinners(candidates, this.communityCards)
+                .forEach((ps, _, winners) => {
+                    ps.player.balance += potBalance / winners.length;
+                });
+        });
         this.isFinished = true;
     }
 };

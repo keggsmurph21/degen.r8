@@ -25,31 +25,90 @@ describe("Round", () => {
     };
 
     describe("make bets", () => {
-        it("blinds", () => {
-            const players = getPlayers(4);
-            const round = new Round(getShuffledDeck(), players, params);
-            expect(round.getPots()).to.deep.equal([{
-                maxCumulativeBet: STARTING_BALANCE,
-                maxMarginalBet: STARTING_BALANCE,
-                marginalBet: params.anteBet + params.bigBlindBet,
-                contributions: [
-                    params.anteBet, params.anteBet + params.smallBlindBet,
-                    params.anteBet + params.bigBlindBet, params.anteBet
-                ],
-            }]);
-            expect(round.getPot())
-                .to.equal(4 * params.anteBet + params.smallBlindBet +
-                          params.bigBlindBet);
-            expect(players[0].balance)
-                .to.equal(STARTING_BALANCE - params.anteBet);
-            expect(players[1].balance)
-                .to.equal(STARTING_BALANCE - params.anteBet -
-                          params.smallBlindBet);
-            expect(players[2].balance)
-                .to.equal(STARTING_BALANCE - params.anteBet -
-                          params.bigBlindBet);
-            expect(players[3].balance)
-                .to.equal(STARTING_BALANCE - params.anteBet);
+        describe("blinds", () => {
+            it("zero players", () => {
+                expect(() => new Round(getShuffledDeck(), [], params))
+                    .to.throw();
+            });
+            it("one player", () => {
+                expect(() =>
+                           new Round(getShuffledDeck(), getPlayers(1), params))
+                    .to.throw();
+            });
+            it("two players", () => {
+                // order of big and small blinds should be reversed for 2p hands
+                const players = getPlayers(2);
+                const round = new Round(getShuffledDeck(), players, params);
+                expect(round.getPots()).to.deep.equal([{
+                    maxCumulativeBet: STARTING_BALANCE,
+                    maxMarginalBet: STARTING_BALANCE,
+                    marginalBet: params.anteBet + params.bigBlindBet,
+                    contributions: [
+                        params.anteBet + params.smallBlindBet,
+                        params.anteBet + params.bigBlindBet,
+                    ],
+                }]);
+                expect(round.getPot())
+                    .to.equal(2 * params.anteBet + params.smallBlindBet +
+                              params.bigBlindBet);
+                expect(players[0].balance)
+                    .to.equal(STARTING_BALANCE - params.anteBet -
+                              params.smallBlindBet);
+                expect(players[1].balance)
+                    .to.equal(STARTING_BALANCE - params.anteBet -
+                              params.bigBlindBet);
+            });
+            it("three players", () => {
+                const players = getPlayers(3);
+                const round = new Round(getShuffledDeck(), players, params);
+                expect(round.getPots()).to.deep.equal([{
+                    maxCumulativeBet: STARTING_BALANCE,
+                    maxMarginalBet: STARTING_BALANCE,
+                    marginalBet: params.anteBet + params.bigBlindBet,
+                    contributions: [
+                        params.anteBet,
+                        params.anteBet + params.smallBlindBet,
+                        params.anteBet + params.bigBlindBet,
+                    ],
+                }]);
+                expect(round.getPot())
+                    .to.equal(3 * params.anteBet + params.smallBlindBet +
+                              params.bigBlindBet);
+                expect(players[0].balance)
+                    .to.equal(STARTING_BALANCE - params.anteBet);
+                expect(players[1].balance)
+                    .to.equal(STARTING_BALANCE - params.anteBet -
+                              params.smallBlindBet);
+                expect(players[2].balance)
+                    .to.equal(STARTING_BALANCE - params.anteBet -
+                              params.bigBlindBet);
+            });
+            it("four players", () => {
+                const players = getPlayers(4);
+                const round = new Round(getShuffledDeck(), players, params);
+                expect(round.getPots()).to.deep.equal([{
+                    maxCumulativeBet: STARTING_BALANCE,
+                    maxMarginalBet: STARTING_BALANCE,
+                    marginalBet: params.anteBet + params.bigBlindBet,
+                    contributions: [
+                        params.anteBet, params.anteBet + params.smallBlindBet,
+                        params.anteBet + params.bigBlindBet, params.anteBet
+                    ],
+                }]);
+                expect(round.getPot())
+                    .to.equal(4 * params.anteBet + params.smallBlindBet +
+                              params.bigBlindBet);
+                expect(players[0].balance)
+                    .to.equal(STARTING_BALANCE - params.anteBet);
+                expect(players[1].balance)
+                    .to.equal(STARTING_BALANCE - params.anteBet -
+                              params.smallBlindBet);
+                expect(players[2].balance)
+                    .to.equal(STARTING_BALANCE - params.anteBet -
+                              params.bigBlindBet);
+                expect(players[3].balance)
+                    .to.equal(STARTING_BALANCE - params.anteBet);
+            });
         });
 
         it("everyone folding after blinds", () => {

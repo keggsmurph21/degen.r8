@@ -117,11 +117,19 @@ export class Round {
                 ps => this.commitBet(ps, params.anteBet, false));
         this.didLastRaise = this.playerStates[0].player;
         if (params.useBlinds) {
-            this.commitBet(this.playerStates[1], params.smallBlindBet);
-            this.commitBet(this.playerStates[2], params.bigBlindBet);
-            this.currentIndex = 3;
-            if (this.currentIndex >= this.playerStates.length)
-                this.currentIndex -= this.playerStates.length;
+            if (this.playerStates.length === 0)
+                throw new Error(`You cannot start a round with no players!`);
+            if (this.playerStates.length === 1)
+                throw new Error(`You cannot start a round with 1 player!`);
+            if (this.playerStates.length === 2) {
+                this.commitBet(this.playerStates[0], params.smallBlindBet);
+                this.commitBet(this.playerStates[1], params.bigBlindBet);
+                this.currentIndex = 0;
+            } else {
+                this.commitBet(this.playerStates[1], params.smallBlindBet);
+                this.commitBet(this.playerStates[2], params.bigBlindBet);
+                this.currentIndex = this.playerStates.length === 3 ? 0 : 3;
+            }
         }
     }
     public getPot(): number {

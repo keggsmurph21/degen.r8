@@ -79,6 +79,8 @@ export class Room {
         }
     }
     public startRound(): Round {
+        if (this.round !== null && !this.round.isFinished)
+            throw new Error(`There is already an ongoing round!`);
         const eligiblePlayers = this.sitting.filter(
             player => player !== null && player.balance > 0);
         if (eligiblePlayers.length === 0)

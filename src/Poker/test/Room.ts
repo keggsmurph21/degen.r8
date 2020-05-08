@@ -120,6 +120,7 @@ describe("Room", () => {
         expect(() => room.startRound()).to.throw();
         room.enter(players[1]);
         room.sit(players[1], 1);
-        console.log(room.startRound());
+        expect(() => room.startRound()).to.not.throw();
+        expect(() => room.startRound()).to.throw();
     });
 });

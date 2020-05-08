@@ -38,22 +38,88 @@ describe("Room", () => {
                               {...params, capacity: MAX_CAPACITY + 1}))
             .to.throw();
         const room = new Room(getShuffledDeck, params);
-        expect(room.getSitting())
-            .to.deep.equal({0: null, 1: null, 2: null, 3: null});
+        expect(room.getSitting()).to.deep.equal([null, null, null, null]);
         expect(room.getStanding()).to.deep.equal(new Set());
         expect(room.getRound()).to.be.null;
     });
 
-    it("enter room", () => {
+    it("enter", () => {
         const room = new Room(getShuffledDeck, params);
         const players = getPlayers(2);
         room.enter(players[0]);
         room.enter(players[1]);
-        expect(room.getSitting())
-            .to.deep.equal({0: null, 1: null, 2: null, 3: null});
+        expect(room.getSitting()).to.deep.equal([null, null, null, null]);
         expect(room.getStanding()).to.deep.equal(new Set(players));
         expect(room.getRound()).to.be.null;
         expect(() => room.enter(players[0])).to.throw();
         expect(() => room.enter(players[1])).to.throw();
+    });
+
+    it("leave", () => {
+        const room = new Room(getShuffledDeck, params);
+        const players = getPlayers(1);
+        expect(() => room.leave(players[0])).to.throw()
+        room.enter(players[0]);
+        expect(room.getSitting()).to.deep.equal([null, null, null, null]);
+        expect(room.getStanding()).to.deep.equal(new Set(players));
+        expect(room.getRound()).to.be.null;
+        room.leave(players[0]);
+        expect(room.getSitting()).to.deep.equal([null, null, null, null]);
+        expect(room.getStanding()).to.deep.equal(new Set());
+        expect(room.getRound()).to.be.null;
+    });
+
+    it("sit", () => {
+        const room = new Room(getShuffledDeck, params);
+        const players = getPlayers(2);
+        expect(() => room.sit(players[0], 0)).to.throw();
+        room.enter(players[0]);
+        expect(() => room.sit(players[0], -1)).to.throw();
+        expect(() => room.sit(players[0], 0.5)).to.throw();
+        expect(() => room.sit(players[0], params.capacity + 1)).to.throw();
+        room.sit(players[0], 0);
+        expect(room.getSitting()).to.deep.equal([players[0], null, null, null]);
+        expect(room.getStanding()).to.deep.equal(new Set());
+        expect(room.getRound()).to.be.null;
+        expect(() => room.sit(players[0], 1)).to.throw();
+        room.enter(players[1]);
+        expect(() => room.sit(players[1], 0)).to.throw();
+        room.sit(players[1], 1);
+        expect(room.getSitting()).to.deep.equal([
+            players[0], players[1], null, null
+        ]);
+        expect(room.getStanding()).to.deep.equal(new Set());
+        expect(room.getRound()).to.be.null;
+    });
+
+    it("stand", () => {
+        const room = new Room(getShuffledDeck, params);
+        const players = getPlayers(1);
+        expect(() => room.stand(players[0])).to.throw();
+        room.enter(players[0]);
+        expect(() => room.stand(players[0])).to.throw();
+        room.sit(players[0], 0);
+        room.stand(players[0]);
+        expect(room.getSitting()).to.deep.equal([null, null, null, null]);
+        expect(room.getStanding()).to.deep.equal(new Set([players[0]]));
+        room.sit(players[0], 2);
+        expect(room.getSitting()).to.deep.equal([null, null, players[0], null]);
+        expect(room.getStanding()).to.deep.equal(new Set());
+        // leaving directly from sitting
+        room.leave(players[0]);
+        expect(room.getSitting()).to.deep.equal([null, null, null, null]);
+        expect(room.getStanding()).to.deep.equal(new Set());
+    });
+
+    it("startRound", () => {
+        const room = new Room(getShuffledDeck, params);
+        const players = getPlayers(2);
+        expect(() => room.startRound()).to.throw();
+        room.enter(players[0]);
+        room.sit(players[0], 0);
+        expect(() => room.startRound()).to.throw();
+        room.enter(players[1]);
+        room.sit(players[1], 1);
+        console.log(room.startRound());
     });
 });

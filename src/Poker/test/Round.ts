@@ -20,25 +20,26 @@ describe("Round", () => {
     const getPlayers = num => {
         let players = [];
         for (let i = 0; i < num; ++i)
-            players.push({balance: STARTING_BALANCE});
+            players.push(
+                {balance: STARTING_BALANCE, id: i, name: `player${i}`});
         return players;
     };
 
     describe("make bets", () => {
         describe("blinds", () => {
             it("zero players", () => {
-                expect(() => new Round(getShuffledDeck(), [], params))
+                expect(() => Round.create(getShuffledDeck(), [], params))
                     .to.throw();
             });
             it("one player", () => {
-                expect(() =>
-                           new Round(getShuffledDeck(), getPlayers(1), params))
+                expect(() => Round.create(getShuffledDeck(), getPlayers(1),
+                                          params))
                     .to.throw();
             });
             it("two players", () => {
                 // order of big and small blinds should be reversed for 2p hands
                 const players = getPlayers(2);
-                const round = new Round(getShuffledDeck(), players, params);
+                const round = Round.create(getShuffledDeck(), players, params);
                 expect(round.getPots()).to.deep.equal([{
                     maxCumulativeBet: STARTING_BALANCE,
                     maxMarginalBet: STARTING_BALANCE,
@@ -60,7 +61,7 @@ describe("Round", () => {
             });
             it("three players", () => {
                 const players = getPlayers(3);
-                const round = new Round(getShuffledDeck(), players, params);
+                const round = Round.create(getShuffledDeck(), players, params);
                 expect(round.getPots()).to.deep.equal([{
                     maxCumulativeBet: STARTING_BALANCE,
                     maxMarginalBet: STARTING_BALANCE,
@@ -85,7 +86,7 @@ describe("Round", () => {
             });
             it("four players", () => {
                 const players = getPlayers(4);
-                const round = new Round(getShuffledDeck(), players, params);
+                const round = Round.create(getShuffledDeck(), players, params);
                 expect(round.getPots()).to.deep.equal([{
                     maxCumulativeBet: STARTING_BALANCE,
                     maxMarginalBet: STARTING_BALANCE,
@@ -111,9 +112,16 @@ describe("Round", () => {
             });
         });
 
+        it("minimum bets", () => {
+            const players = getPlayers(2);
+            const round = Round.create(getShuffledDeck(), players,
+                                       {...params, minimumBet: 5});
+            expect(() => round.makeBet(players[0], Bet.Raise, 4)).to.throw();
+        });
+
         it("everyone folding after blinds", () => {
             const players = getPlayers(4);
-            const round = new Round(getShuffledDeck(), players, params);
+            const round = Round.create(getShuffledDeck(), players, params);
             round.makeBet(players[3], Bet.Fold);
             round.makeBet(players[0], Bet.Fold);
             expect(round.getPots()).to.deep.equal([{
@@ -143,7 +151,7 @@ describe("Round", () => {
 
         it("everyone calling first round, then folding", () => {
             const players = getPlayers(4);
-            const round = new Round(getShuffledDeck(), players, params);
+            const round = Round.create(getShuffledDeck(), players, params);
             round.makeBet(players[3], Bet.Call);
             expect(round.getPots()).to.deep.equal([{
                 maxCumulativeBet: STARTING_BALANCE,
@@ -203,7 +211,7 @@ describe("Round", () => {
 
         it("everyone calling first two rounds, then folding", () => {
             const players = getPlayers(4);
-            const round = new Round(getShuffledDeck(), players, params);
+            const round = Round.create(getShuffledDeck(), players, params);
             round.makeBet(players[3], Bet.Call);
             round.makeBet(players[0], Bet.Call);
             round.makeBet(players[1], Bet.Call);
@@ -235,7 +243,7 @@ describe("Round", () => {
 
         it("everyone calling first three rounds, then folding", () => {
             const players = getPlayers(4);
-            const round = new Round(getShuffledDeck(), players, params);
+            const round = Round.create(getShuffledDeck(), players, params);
             round.makeBet(players[3], Bet.Call);
             round.makeBet(players[0], Bet.Call);
             round.makeBet(players[1], Bet.Call);
@@ -282,7 +290,7 @@ describe("Round", () => {
 
         it("two players folding, small blind calling then folding", () => {
             const players = getPlayers(4);
-            const round = new Round(getShuffledDeck(), players, params);
+            const round = Round.create(getShuffledDeck(), players, params);
             round.makeBet(players[3], Bet.Fold);
             round.makeBet(players[0], Bet.Fold);
             round.makeBet(players[1], Bet.Call);
@@ -315,9 +323,9 @@ describe("Round", () => {
 
         it("one player raising", () => {
             const players = getPlayers(4);
-            const round = new Round(getShuffledDeck(), players, params);
+            const round = Round.create(getShuffledDeck(), players, params);
             let currentBet = params.anteBet + params.bigBlindBet;
-            let raiseBy = 0.01;
+            let raiseBy = MINIMUM_BET;
             expect(round.getCurrentBet()).to.equal(currentBet);
             expect(() => round.makeBet(players[3], Bet.Raise, -1)).to.throw();
             expect(() => round.makeBet(players[3], Bet.Raise, 0)).to.throw();
@@ -341,9 +349,9 @@ describe("Round", () => {
 
         it("three players raising", () => {
             const players = getPlayers(4);
-            const round = new Round(getShuffledDeck(), players, params);
+            const round = Round.create(getShuffledDeck(), players, params);
             let currentBet = params.anteBet + params.bigBlindBet;
-            let raiseBy = 0.5;
+            let raiseBy = MINIMUM_BET;
             // p3 raises
             round.makeBet(players[3], Bet.Raise, raiseBy);
             currentBet += raiseBy;
@@ -413,7 +421,7 @@ describe("Round", () => {
         it("raising by an amount no one can afford", () => {
             const players = getPlayers(4);
             players[3].balance = 3 * STARTING_BALANCE;
-            const round = new Round(getShuffledDeck(), players, params);
+            const round = Round.create(getShuffledDeck(), players, params);
             expect(() => round.makeBet(players[3], Bet.Raise, STARTING_BALANCE))
                 .to.throw();
         });
@@ -421,9 +429,9 @@ describe("Round", () => {
         describe("side pots", () => {
             it("normal betting", () => {
                 const players = getPlayers(4);
-                const round = new Round(getShuffledDeck(), players, params);
+                const round = Round.create(getShuffledDeck(), players, params);
                 let currentBet = params.anteBet + params.bigBlindBet;
-                let raiseBy = 0.5;
+                let raiseBy = MINIMUM_BET;
                 expect(round.getPots()).to.deep.equal([{
                     maxCumulativeBet: STARTING_BALANCE,
                     maxMarginalBet: STARTING_BALANCE,
@@ -492,7 +500,7 @@ describe("Round", () => {
                 players[0].balance = 2 * STARTING_BALANCE;
                 players[1].balance = 2 * STARTING_BALANCE;
                 players[2].balance = STARTING_BALANCE;
-                const round = new Round(getShuffledDeck(), players, params);
+                const round = Round.create(getShuffledDeck(), players, params);
                 expect(round.getPots()).to.deep.equal([{
                     maxCumulativeBet: STARTING_BALANCE,
                     maxMarginalBet: STARTING_BALANCE,
@@ -563,7 +571,7 @@ describe("Round", () => {
                 players[1].balance = 20;
                 players[2].balance = 30;
                 players[3].balance = 40;
-                const round = new Round(getShuffledDeck(), players, params);
+                const round = Round.create(getShuffledDeck(), players, params);
                 expect(() => round.makeBet(players[3], Bet.Raise, 35))
                     .to.throw();
                 round.makeBet(players[3], Bet.Raise,
@@ -646,7 +654,7 @@ describe("Round", () => {
                 players[0].balance = 2 * STARTING_BALANCE;
                 players[1].balance = 2 * STARTING_BALANCE;
                 players[2].balance = STARTING_BALANCE;
-                const round = new Round(getShuffledDeck(), players, params);
+                const round = Round.create(getShuffledDeck(), players, params);
                 round.makeBet(players[0], Bet.Raise, STARTING_BALANCE);
                 round.makeBet(players[1], Bet.Call);
                 round.makeBet(players[2], Bet.Call);
@@ -701,7 +709,7 @@ describe("Round", () => {
                 players[0].balance = 2 * STARTING_BALANCE;
                 players[1].balance = 2 * STARTING_BALANCE;
                 players[2].balance = STARTING_BALANCE;
-                const round = new Round(getShuffledDeck(), players, params);
+                const round = Round.create(getShuffledDeck(), players, params);
                 round.makeBet(players[0], Bet.Raise, STARTING_BALANCE);
                 round.makeBet(players[1], Bet.Call);
                 round.makeBet(players[2], Bet.Call);
@@ -761,7 +769,7 @@ describe("Round", () => {
         const getPlayerState = (i: number, holeCards: [Card, Card]) => {
             return {
                 index: i,
-                player: {balance: STARTING_BALANCE},
+                player: {balance: STARTING_BALANCE, id: i, name: `player${i}`},
                 maxStakes: STARTING_BALANCE,
                 hasFolded: false,
                 holeCards,
@@ -957,7 +965,7 @@ describe("Round", () => {
     describe("calculate payouts", () => {
         it("single main pot, no side pots", () => {
             const players = getPlayers(3);
-            const round = new Round(
+            const round = Round.create(
                 [
                     // community cards
                     {suit: Suit.Diamonds, rank: Rank.Five},
@@ -1003,7 +1011,7 @@ describe("Round", () => {
         });
         it("split main pot, no side pots", () => {
             const players = getPlayers(3);
-            const round = new Round(
+            const round = Round.create(
                 [
                     // community cards
                     {suit: Suit.Diamonds, rank: Rank.Five},
@@ -1046,7 +1054,7 @@ describe("Round", () => {
             players[0].balance = 2 * STARTING_BALANCE;
             players[1].balance = 2 * STARTING_BALANCE;
             players[2].balance = STARTING_BALANCE;
-            const round = new Round(
+            const round = Round.create(
                 [
                     // community cards
                     {suit: Suit.Diamonds, rank: Rank.Five},
@@ -1095,7 +1103,7 @@ describe("Round", () => {
             players[0].balance = STARTING_BALANCE;
             players[1].balance = 2 * STARTING_BALANCE;
             players[2].balance = 2 * STARTING_BALANCE;
-            const round = new Round(
+            const round = Round.create(
                 [
                     // community cards
                     {suit: Suit.Diamonds, rank: Rank.Five},
@@ -1145,7 +1153,7 @@ describe("Round", () => {
             players[0].balance = STARTING_BALANCE;
             players[1].balance = 2 * STARTING_BALANCE;
             players[2].balance = 2 * STARTING_BALANCE;
-            const round = new Round(
+            const round = Round.create(
                 [
                     // community cards
                     {suit: Suit.Diamonds, rank: Rank.Five},
@@ -1195,7 +1203,7 @@ describe("Round", () => {
             players[0].balance = STARTING_BALANCE;
             players[1].balance = 2 * STARTING_BALANCE;
             players[2].balance = 2 * STARTING_BALANCE;
-            const round = new Round(
+            const round = Round.create(
                 [
                     // community cards
                     {suit: Suit.Diamonds, rank: Rank.Five},
@@ -1242,7 +1250,7 @@ describe("Round", () => {
             players[1].balance = STARTING_BALANCE;
             players[2].balance = 2 * STARTING_BALANCE;
             players[3].balance = 2 * STARTING_BALANCE;
-            const round = new Round(
+            const round = Round.create(
                 [
                     // community cards
                     {suit: Suit.Diamonds, rank: Rank.Five},
@@ -1294,7 +1302,7 @@ describe("Round", () => {
             players[1].balance = STARTING_BALANCE;
             players[2].balance = 2 * STARTING_BALANCE;
             players[3].balance = 2 * STARTING_BALANCE;
-            const round = new Round(
+            const round = Round.create(
                 [
                     // community cards (royal flush)
                     {suit: Suit.Diamonds, rank: Rank.Ten},
@@ -1339,6 +1347,57 @@ describe("Round", () => {
             expect(players[1].balance).to.equal(STARTING_BALANCE);
             expect(players[2].balance).to.equal(2 * STARTING_BALANCE);
             expect(players[3].balance).to.equal(2 * STARTING_BALANCE);
+        });
+    });
+
+    describe("(de)serialize", () => {
+        it("simple", () => {
+            const players = getPlayers(2);
+            const round = Round.create(getShuffledDeck(), players, params);
+            expect(Round.deserialize(
+                       JSON.parse(JSON.stringify(round.serialize()))))
+                .to.deep.equal(round);
+        });
+        it("complex", () => {
+            const players = getPlayers(4);
+            players[0].balance = STARTING_BALANCE;
+            players[1].balance = STARTING_BALANCE;
+            players[2].balance = 2 * STARTING_BALANCE;
+            players[3].balance = 2 * STARTING_BALANCE;
+            const round = Round.create(
+                [
+                    // community cards (royal flush)
+                    {suit: Suit.Diamonds, rank: Rank.Ten},
+                    {suit: Suit.Diamonds, rank: Rank.Jack},
+                    {suit: Suit.Diamonds, rank: Rank.Queen},
+                    {suit: Suit.Diamonds, rank: Rank.King},
+                    {suit: Suit.Diamonds, rank: Rank.Ace},
+                    // p3 cards
+                    {suit: Suit.Clubs, rank: Rank.Two},
+                    {suit: Suit.Clubs, rank: Rank.Five},
+                    // p2 cards
+                    {suit: Suit.Spades, rank: Rank.Three},
+                    {suit: Suit.Spades, rank: Rank.Five},
+                    // p1 cards
+                    {suit: Suit.Spades, rank: Rank.Two},
+                    {suit: Suit.Spades, rank: Rank.Ace},
+                    // p0 cards
+                    {suit: Suit.Hearts, rank: Rank.Two},
+                    {suit: Suit.Hearts, rank: Rank.Ace},
+                ],
+                players, params);
+            round.makeBet(players[3], Bet.Raise, STARTING_BALANCE);
+            round.makeBet(players[0], Bet.Call);
+            round.makeBet(players[1], Bet.Call);
+            round.makeBet(players[2], Bet.Call);
+            round.makeBet(players[3], Bet.Call);
+            round.makeBet(players[2], Bet.Call);
+            round.makeBet(players[3], Bet.Call);
+            round.makeBet(players[2], Bet.Call);
+            round.makeBet(players[3], Bet.Call);
+            expect(Round.deserialize(
+                       JSON.parse(JSON.stringify(round.serialize()))))
+                .to.deep.equal(round);
         });
     });
 });

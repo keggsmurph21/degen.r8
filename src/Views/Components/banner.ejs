@@ -1,0 +1,24 @@
+<div id="banner">
+    <div id="banner-internal-links">
+        <a href="/">degen.r8</a>
+        <% if (path !== null) { %>
+            <a href="/<%= path %>.do"><%= path %></a>
+        <% } %>
+    </div>
+    <div id="banner-external-links">
+        <% if (isLoggedIn) { %>
+            <div id="banner-logout">
+                <form action="/logout.rest" method="post">
+                    <input type="submit" value="logout">
+                </form>
+            </div>
+        <% } else { %>
+            <div id="banner-login">
+                <a href="/login.do">login</a>
+            </div>
+            <div id="banner-register">
+                <a href="/register.do">register</a>
+            </div>
+        <% } %>
+    </div>
+</div>

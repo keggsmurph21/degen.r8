@@ -5,33 +5,39 @@ import {BestHand, compareHands, getBestFiveCardHand} from "./Hand";
 import {Player} from "./Player";
 
 const DEBUG = false;
-function debug(...args) {
+function debug(...args: any) {
     if (DEBUG)
         console.log(...args);
 }
 
-interface PlayerState {
+export interface PublicPlayerState {
     index: number;
     player: Player;
     hasFolded: boolean;
-    holeCards: readonly[Card, Card];
-    amountBetThisRound: number;
     maxStakes: number;
+}
+
+export interface PrivatePlayerState extends PublicPlayerState {
+    holeCards: readonly[Card, Card];
+}
+
+export interface PlayerState extends PrivatePlayerState {}
+
+export interface SerialRound {
+    playerStates: PlayerState[];
+    deck: Card[];
+    minimumBet: number;
+    currentIndex: number;
+    communityCards: Card[];
+    pots: Pot[];
+    didLastRaiseIndex: number;
+    isFinished: boolean;
 }
 
 export enum Bet {
     Call,
     Raise,
     Fold,
-}
-
-export interface RoundParameters {
-    minimumBet: number;
-    useBlinds: boolean;
-    bigBlindBet: number;
-    smallBlindBet: number;
-    useAntes: boolean;
-    anteBet: number;
 }
 
 interface ScorableHand {
@@ -59,6 +65,25 @@ export function getWinners(playerStates: PlayerState[],
                          (a, b) => compareHands(a.bestHand, b.bestHand))
         .pop()
         .map(h => h.playerState);
+}
+
+export interface RoundView {
+    myPlayerState: PrivatePlayerState;
+    otherPlayerStates: PublicPlayerState[];
+    minimumBet: number;
+    communityCards: Card[];
+    pots: Pot[];
+    didLastRaiseIndex: number;
+    isFinished: boolean;
+}
+
+export interface RoundParameters {
+    minimumBet: number;
+    useBlinds: boolean;
+    bigBlindBet: number;
+    smallBlindBet: number;
+    useAntes: boolean;
+    anteBet: number;
 }
 
 interface Pot {
@@ -90,47 +115,77 @@ function commitToPot(pot: Pot, ps: PlayerState, balance: number): number {
 }
 
 export class Round {
-    private readonly playerStates: PlayerState[] = [];
+    private playerStates: PlayerState[] = [];
     private deck: Card[];
     private currentIndex: number = 0;
     private communityCards: Card[] = [];
-    private currentBet: number = 0;
     private pots: Pot[] = [];
-    private didLastRaise: Player;
-    private anteBet: number = 0;
+    private didLastRaiseIndex: number = 0;
+    public minimumBet: number;
     public isFinished: boolean = false;
-    constructor(deck: Card[], players: Player[], params: RoundParameters) {
-        this.deck = deck;
+    private constructor() {}
+    public static create(deck: Card[], players: Player[],
+                         params: RoundParameters): Round {
+        const round = new Round();
+        round.deck = deck;
+        round.minimumBet = params.minimumBet;
         players.forEach((player, i) => {
-            this.playerStates.push({
+            round.playerStates.push({
                 index: i,
                 player,
                 hasFolded: false,
-                holeCards: [this.deck.pop(), this.deck.pop()],
-                amountBetThisRound: 0,
+                holeCards: [round.deck.pop(), round.deck.pop()],
                 maxStakes: player.balance,
             });
         });
-        this.pushPot();
+        round.pushPot();
         if (params.useAntes)
-            this.playerStates.forEach(
-                ps => this.commitBet(ps, params.anteBet, false));
-        this.didLastRaise = this.playerStates[0].player;
+            round.playerStates.forEach(
+                ps => round.commitBet(ps, params.anteBet, false));
         if (params.useBlinds) {
-            if (this.playerStates.length === 0)
+            if (round.playerStates.length === 0)
                 throw new Error(`You cannot start a round with no players!`);
-            if (this.playerStates.length === 1)
+            if (round.playerStates.length === 1)
                 throw new Error(`You cannot start a round with 1 player!`);
-            if (this.playerStates.length === 2) {
-                this.commitBet(this.playerStates[0], params.smallBlindBet);
-                this.commitBet(this.playerStates[1], params.bigBlindBet);
-                this.currentIndex = 0;
+            if (round.playerStates.length === 2) {
+                round.commitBet(round.playerStates[0], params.smallBlindBet);
+                round.commitBet(round.playerStates[1], params.bigBlindBet);
+                round.currentIndex = 0;
             } else {
-                this.commitBet(this.playerStates[1], params.smallBlindBet);
-                this.commitBet(this.playerStates[2], params.bigBlindBet);
-                this.currentIndex = this.playerStates.length === 3 ? 0 : 3;
+                round.commitBet(round.playerStates[1], params.smallBlindBet);
+                round.commitBet(round.playerStates[2], params.bigBlindBet);
+                round.currentIndex = round.playerStates.length === 3 ? 0 : 3;
             }
         }
+        return round;
+    }
+    public static deserialize(serial: SerialRound): Round {
+        const round = new Round();
+        round.playerStates = serial.playerStates.slice();
+        round.minimumBet = serial.minimumBet;
+        round.deck = serial.deck;
+        round.currentIndex = serial.currentIndex;
+        round.communityCards = serial.communityCards;
+        round.pots = serial.pots.map(pot => {
+            return { ...pot, contributions: pot.contributions.slice() }
+        });
+        round.didLastRaiseIndex = serial.didLastRaiseIndex;
+        round.isFinished = serial.isFinished;
+        return round;
+    }
+    public serialize(): SerialRound {
+        return {
+            playerStates: this.playerStates.slice(),
+            minimumBet: this.minimumBet,
+            deck: this.deck.slice(),
+            currentIndex: this.currentIndex,
+            communityCards: this.communityCards.slice(),
+            pots: this.pots.map(pot => {
+                return { ...pot, contributions: pot.contributions.slice() }
+            }),
+            didLastRaiseIndex: this.didLastRaiseIndex,
+            isFinished: this.isFinished,
+        };
     }
     public getPot(): number {
         if (this.isFinished)
@@ -152,19 +207,17 @@ export class Round {
         return this.pots.reduce((acc, pot) => acc + pot.contributions[ps.index],
                                 0);
     }
-    public getStateFor(player: Player): Readonly<PlayerState>|null {
-        for (let i = 0; i < this.playerStates.length; ++i) {
-            if (this.playerStates[i].player === player)
-                return this.playerStates[i];
-        }
-        return null;
+    public getCurrentIndex(): number { return this.currentIndex; }
+    public getDidLastRaiseIndex(): number { return this.didLastRaiseIndex; }
+    public getPlayerStates(): PlayerState[] {
+        return this.playerStates.slice();
     }
     private commitBet(ps: PlayerState, amountToCommit: number,
                       affectsRoundTotals: boolean = true): void {
         debug("commitBet", ps.index, amountToCommit, this.pots);
         if (this.getCurrentBet() <
             this.getAmountAlreadyBet(ps) + amountToCommit)
-            this.didLastRaise = ps.player;
+            this.didLastRaiseIndex = ps.index;
 
         let uncommittedAmount = Math.min(ps.player.balance, amountToCommit);
         ps.player.balance -= uncommittedAmount;
@@ -232,15 +285,16 @@ export class Round {
         const currentPlayer = currentPlayerState.player;
         const callAmount =
             this.getCurrentBet() - this.getAmountAlreadyBet(currentPlayerState);
-        if (currentPlayer !== player)
+        if (!Player.eq(player, currentPlayer))
             throw new Error("This is not the current player!");
         switch (bet) {
         case Bet.Call:
             this.commitBet(currentPlayerState, callAmount);
             break;
         case Bet.Raise:
-            if (raiseBy <= 0)
-                throw new Error(`You must raise by a positive number!`);
+            if (raiseBy < this.minimumBet)
+                throw new Error(
+                    `You must raise by at least ${this.minimumBet}!`);
             if (currentPlayer.balance < callAmount + raiseBy)
                 throw new Error(`You can not raise by more than your balance!`);
             const highestPossibleBet =
@@ -270,7 +324,7 @@ export class Round {
                 this.currentIndex -= this.playerStates.length;
         } while (this.playerStates[this.currentIndex].hasFolded ||
                  this.playerStates[this.currentIndex].player.balance === 0)
-        if (this.didLastRaise === this.playerStates[this.currentIndex].player) {
+        if (this.didLastRaiseIndex === this.currentIndex) {
             if (this.communityCards.length === 0) {
                 this.communityCards.push(this.deck.pop());
                 this.communityCards.push(this.deck.pop());

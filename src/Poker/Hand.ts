@@ -2,7 +2,7 @@ import {zip} from "../Utils";
 import {Card, forEachRank, forEachSuit, Rank, Suit} from "./Card";
 
 const DEBUG = false;
-function debug(...args) {
+function debug(...args: any) {
     if (DEBUG)
         console.log(...args);
 }

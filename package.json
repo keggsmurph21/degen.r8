@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc",
     "start": "SESSION_SECRET=FIXME PORT=5400 nodemon",
-    "test": "mocha src/**/test/*.ts"
+    "test": "mocha 'src/**/test/*.ts'"
   },
   "author": "Kevin Murphy",
   "license": "GPL-3.0",

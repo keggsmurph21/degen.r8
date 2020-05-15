@@ -1,5 +1,4 @@
-import {clamp} from "../Utils";
-
+import {clamp, permute} from "../Utils";
 import {Card, getShuffledDeck} from "./Card";
 import {Player, Round, RoundParameters, RoundView, SerialRound} from "./Round";
 
@@ -22,6 +21,7 @@ export interface SerialRoom extends RoomParameters {
     sitting: Player[];
     standing: Player[];
     round: SerialRound;
+    dealerIndex: number;
 }
 
 type DeckSupplier = () => Card[];
@@ -31,6 +31,7 @@ export class Room {
     private sitting: Player[] = [];
     private standing: Player[] = [];
     private round: Round|null = null;
+    private dealerIndex: number = 0;
 
     private getDeck: DeckSupplier;
     private params: RoomParameters;
@@ -58,6 +59,7 @@ export class Room {
         room.getDeck = getDeck;
         room.sitting = serial.sitting.slice();
         room.standing = serial.standing.slice();
+        room.dealerIndex = serial.dealerIndex;
         room.round =
             serial.round === null ? null : Round.deserialize(serial.round);
         room.params = {
@@ -76,6 +78,7 @@ export class Room {
         return {
             sitting: this.sitting.slice(),
             standing: this.standing.slice(),
+            dealerIndex: this.dealerIndex,
             round: this.round ? this.round.serialize() : null,
             capacity: this.params.capacity,
             autoplayInterval: this.params.autoplayInterval,
@@ -143,8 +146,9 @@ export class Room {
     public startRound(): Round {
         if (this.round !== null && !this.round.isFinished)
             throw new Error(`There is already an ongoing round!`);
-        const eligiblePlayers = this.sitting.filter(
-            player => player !== null && player.balance > 0);
+        const eligiblePlayers =
+            permute(this.sitting, this.dealerIndex)
+                .filter(player => player !== null && player.balance > 0);
         if (eligiblePlayers.length === 0)
             throw new Error(
                 `There are no eligible players to start a Round with!`);

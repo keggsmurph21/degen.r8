@@ -54,3 +54,26 @@ export function sortIntoTiers<T>(ts: T[],
 export function clamp(min: number, value: number, max: number): number {
     return Math.min(max, Math.max(min, value));
 }
+
+// Permute (cycle thru) elements rightwards in an array <permuteBy> times.  For
+// example:
+//
+//   permute([1, 2, 3], 1); // yields [3, 1, 2]
+//
+export function permute<T>(ts: T[], permuteBy: number): T[] {
+    if (ts.length === 0)
+        return ts;
+    let normalizedPermuteBy = permuteBy;
+    while (normalizedPermuteBy < 0)
+        normalizedPermuteBy += ts.length;
+    while (normalizedPermuteBy >= ts.length)
+        normalizedPermuteBy -= ts.length;
+    let ret = new Array(ts.length);
+    for (let i = 0; i < ts.length; ++i) {
+        let permutedIndex = i - normalizedPermuteBy;
+        if (permutedIndex < 0)
+            permutedIndex += ts.length;
+        ret[i] = ts[permutedIndex];
+    }
+    return ret;
+}

@@ -2,9 +2,8 @@ import {Request, Response} from "express";
 
 import {Room as RoomModel} from "../Models/Room";
 import {UserModel} from "../Models/User";
-import {Player} from "../Poker/Player";
 import {MAX_CAPACITY, MIN_CAPACITY, Room as PokerRoom} from "../Poker/Room";
-import {Bet} from "../Poker/Round";
+import {Bet, Player} from "../Poker/Round";
 
 const MIN_BET = 0.00;
 const MAX_BET = 100.00;
@@ -112,7 +111,6 @@ export const postEnter = async (req: Request, res: Response) => {
     if (room === null)
         return res.sendStatus(404);
     const user = req.user as UserModel;
-    const {passwordHash, ...player} = user;
     try {
         room.enter(req.user as Player);
     } catch (e) {
@@ -129,10 +127,8 @@ export const postLeave = async (req: Request, res: Response) => {
     const room = await RoomModel.byId(roomId, secret);
     if (room === null)
         return res.sendStatus(404);
-    const user = req.user as UserModel;
-    const {passwordHash, ...player} = user;
     try {
-        room.leave(player as Player);
+        room.leave(req.user as Player);
         console.log(room);
     } catch (e) {
         console.log(e);
@@ -149,10 +145,8 @@ export const postSit = async (req: Request, res: Response) => {
     const room = await RoomModel.byId(roomId, secret);
     if (room === null)
         return res.sendStatus(404);
-    const user = req.user as UserModel;
-    const {passwordHash, ...player} = user;
     try {
-        room.sit(player as Player, seatIndex);
+        room.sit(req.user as Player, seatIndex);
     } catch (e) {
         console.log(e);
         req.flash("errors", e.message);
@@ -167,10 +161,8 @@ export const postStand = async (req: Request, res: Response) => {
     const room = await RoomModel.byId(roomId, secret);
     if (room === null)
         return res.sendStatus(404);
-    const user = req.user as UserModel;
-    const {passwordHash, ...player} = user;
     try {
-        room.stand(player as Player);
+        room.stand(req.user as Player);
     } catch (e) {
         console.log(e);
         req.flash("errors", e.message);
@@ -183,14 +175,13 @@ export const postStartRound = async (req: Request, res: Response) => {
     const roomId = parseInt(req.params.roomId as any);
     const secret = (req.body.secret as string || "").toString() || null;
     const room = await RoomModel.byId(roomId, secret);
+    const user = req.user as UserModel;
     if (room === null)
         return res.sendStatus(404);
-    const user = req.user as UserModel;
-    const {passwordHash, ...player} = user;
-    if (!room.getSitting().reduce(
-            (alreadyFound, sittingPlayer) =>
-                alreadyFound || Player.eq(player as Player, sittingPlayer),
-            false)) {
+    if (!room.getSitting().reduce((alreadyFound, sittingPlayer) =>
+                                      alreadyFound ||
+                                      (user.id === sittingPlayer.id),
+                                  false)) {
         return res.sendStatus(403);
     }
     try {
@@ -210,11 +201,10 @@ export const postBet = async (req: Request, res: Response) => {
     if (room === null)
         return res.sendStatus(404);
     const user = req.user as UserModel;
-    const {passwordHash, ...player} = user;
-    if (!room.getSitting().reduce(
-            (alreadyFound, sittingPlayer) =>
-                alreadyFound || Player.eq(player as Player, sittingPlayer),
-            false)) {
+    if (!room.getSitting().reduce((alreadyFound, sittingPlayer) =>
+                                      alreadyFound ||
+                                      (user.id === sittingPlayer.id),
+                                  false)) {
         return res.sendStatus(403);
     }
     const betType = req.body.betType === "fold"
@@ -235,7 +225,7 @@ export const postBet = async (req: Request, res: Response) => {
         }
     }
     try {
-        room.getRound().makeBet(player as Player, betType, raiseBy);
+        room.getRound().makeBet(user.id, betType, raiseBy);
     } catch (e) {
         console.log(e);
         return res.sendStatus(400);
@@ -243,5 +233,4 @@ export const postBet = async (req: Request, res: Response) => {
     await RoomModel.save(roomId, room, secret);
     res.redirect(`/room.do?r=${roomId}&s=${secret || ""}`);
 };
-
 }

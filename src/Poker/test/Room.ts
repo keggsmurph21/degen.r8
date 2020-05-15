@@ -188,7 +188,9 @@ describe("Room", () => {
             round: {
                 myPlayerState: {
                     index: 0,
-                    player: players[0],
+                    playerId: 0,
+                    balance: STARTING_BALANCE - params.anteBet -
+                                 params.smallBlindBet,
                     hasFolded: false,
                     holeCards: [
                         {suit: Suit.Hearts, rank: Rank.Queen},
@@ -198,7 +200,9 @@ describe("Room", () => {
                 },
                 otherPlayerStates: [{
                     index: 1,
-                    player: players[1],
+                    playerId: 1,
+                    balance:
+                        STARTING_BALANCE - params.anteBet - params.bigBlindBet,
                     hasFolded: false,
                     maxStakes: STARTING_BALANCE,
                 }],
@@ -227,7 +231,9 @@ describe("Room", () => {
                 round: {
                     myPlayerState: {
                         index: 1,
-                        player: players[1],
+                        playerId: 1,
+                        balance: STARTING_BALANCE - params.anteBet -
+                                     params.bigBlindBet,
                         hasFolded: false,
                         holeCards: [
                             {suit: Suit.Spades, rank: Rank.Nine},
@@ -237,7 +243,9 @@ describe("Room", () => {
                     },
                     otherPlayerStates: [{
                         index: 0,
-                        player: players[0],
+                        playerId: 0,
+                        balance: STARTING_BALANCE - params.anteBet -
+                                     params.smallBlindBet,
                         hasFolded: false,
                         maxStakes: STARTING_BALANCE,
                     }],
@@ -268,13 +276,17 @@ describe("Room", () => {
                 otherPlayerStates: [
                     {
                         index: 0,
-                        player: players[0],
+                        playerId: 0,
+                        balance: STARTING_BALANCE - params.anteBet -
+                                     params.smallBlindBet,
                         hasFolded: false,
                         maxStakes: STARTING_BALANCE,
                     },
                     {
                         index: 1,
-                        player: players[1],
+                        playerId: 1,
+                        balance: STARTING_BALANCE - params.anteBet -
+                                     params.bigBlindBet,
                         hasFolded: false,
                         maxStakes: STARTING_BALANCE
                     }

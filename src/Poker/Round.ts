@@ -1,8 +1,6 @@
-import {sortIntoTiers} from "../Utils";
-
+import {sortIntoTiers, zip} from "../Utils";
 import {Card} from "./Card";
 import {BestHand, compareHands, getBestFiveCardHand} from "./Hand";
-import {Player} from "./Player";
 
 const DEBUG = false;
 function debug(...args: any) {
@@ -10,9 +8,15 @@ function debug(...args: any) {
         console.log(...args);
 }
 
+export interface Player {
+    id: number;
+    balance: number;
+}
+
 export interface PublicPlayerState {
     index: number;
-    player: Player;
+    playerId: number;
+    balance: number;
     hasFolded: boolean;
     maxStakes: number;
 }
@@ -132,9 +136,10 @@ export class Round {
         players.forEach((player, i) => {
             round.playerStates.push({
                 index: i,
-                player,
+                playerId: player.id,
                 hasFolded: false,
                 holeCards: [round.deck.pop(), round.deck.pop()],
+                balance: player.balance,
                 maxStakes: player.balance,
             });
         });
@@ -219,8 +224,8 @@ export class Round {
             this.getAmountAlreadyBet(ps) + amountToCommit)
             this.didLastRaiseIndex = ps.index;
 
-        let uncommittedAmount = Math.min(ps.player.balance, amountToCommit);
-        ps.player.balance -= uncommittedAmount;
+        let uncommittedAmount = Math.min(ps.balance, amountToCommit);
+        ps.balance -= uncommittedAmount;
 
         uncommittedAmount =
             this.pots.filter(pot => pot.maxCumulativeBet <= ps.maxStakes)
@@ -272,20 +277,19 @@ export class Round {
             if (playersThatCanAfford.length === 0)
                 throw new Error("This shouldn't happen!");
             const playerToRefund = playersThatCanAfford[0];
-            playerToRefund.player.balance +=
+            playerToRefund.balance +=
                 pot.contributions.reduce((acc, contrib) => acc += contrib, 0);
             return false;
         })
         debug("post-filter", this.pots);
     }
-    public makeBet(player: Player, bet: Bet, raiseBy: number = 0): void {
+    public makeBet(playerId: number, bet: Bet, raiseBy: number = 0): void {
         if (this.isFinished)
             throw new Error("Round is over!");
         const currentPlayerState = this.playerStates[this.currentIndex];
-        const currentPlayer = currentPlayerState.player;
         const callAmount =
             this.getCurrentBet() - this.getAmountAlreadyBet(currentPlayerState);
-        if (!Player.eq(player, currentPlayer))
+        if (playerId !== currentPlayerState.playerId)
             throw new Error("This is not the current player!");
         switch (bet) {
         case Bet.Call:
@@ -295,12 +299,12 @@ export class Round {
             if (raiseBy < this.minimumBet)
                 throw new Error(
                     `You must raise by at least ${this.minimumBet}!`);
-            if (currentPlayer.balance < callAmount + raiseBy)
+            if (currentPlayerState.balance < callAmount + raiseBy)
                 throw new Error(`You can not raise by more than your balance!`);
             const highestPossibleBet =
                 this.playerStates.filter(ps => !ps.hasFolded)
                     .filter(ps => ps !== currentPlayerState)
-                    .map(ps => ps.player.balance + this.getAmountAlreadyBet(ps))
+                    .map(ps => ps.balance + this.getAmountAlreadyBet(ps))
                     .reduce((a, b) => Math.max(a, b), 0);
             if (callAmount + raiseBy > highestPossibleBet)
                 throw new Error(
@@ -323,7 +327,7 @@ export class Round {
             if (this.currentIndex >= this.playerStates.length)
                 this.currentIndex -= this.playerStates.length;
         } while (this.playerStates[this.currentIndex].hasFolded ||
-                 this.playerStates[this.currentIndex].player.balance === 0)
+                 this.playerStates[this.currentIndex].balance === 0)
         if (this.didLastRaiseIndex === this.currentIndex) {
             if (this.communityCards.length === 0) {
                 this.communityCards.push(this.deck.pop());
@@ -351,9 +355,14 @@ export class Round {
                 pot.contributions.reduce((acc, contrib) => acc += contrib, 0);
             getWinners(candidates, this.communityCards)
                 .forEach((ps, _, winners) => {
-                    ps.player.balance += potBalance / winners.length;
+                    ps.balance += potBalance / winners.length;
                 });
         });
         this.isFinished = true;
+    }
+    public getBalance(playerId: number): number {
+        return this.playerStates.filter(ps => ps.playerId === playerId)
+            .pop()
+            .balance;
     }
 };

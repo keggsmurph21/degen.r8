@@ -1,8 +1,7 @@
 import {clamp} from "../Utils";
 
 import {Card, getShuffledDeck} from "./Card";
-import {Player} from "./Player";
-import {Round, RoundParameters, RoundView, SerialRound} from "./Round";
+import {Player, Round, RoundParameters, RoundView, SerialRound} from "./Round";
 
 export const MIN_CAPACITY = 2;
 export const MAX_CAPACITY = 16;
@@ -89,16 +88,16 @@ export class Room {
         };
     }
     private isSitting(player: Player): boolean {
-        return this.sitting.reduce((isSitting, nextPlayer) =>
-                                       isSitting ||
-                                       Player.eq(player, nextPlayer),
-                                   false);
+        return this.sitting.reduce(
+            (isSitting, nextPlayer) =>
+                isSitting || (nextPlayer && player.id === nextPlayer.id),
+            false);
     }
     private isStanding(player: Player): boolean {
-        return this.standing.reduce((isSitting, nextPlayer) =>
-                                        isSitting ||
-                                        Player.eq(player, nextPlayer),
-                                    false);
+        return this.standing.reduce(
+            (isSitting, nextPlayer) =>
+                isSitting || (nextPlayer && player.id === nextPlayer.id),
+            false);
     }
     public sit(player: Player, position: number): void {
         if (!this.isStanding(player))
@@ -108,15 +107,16 @@ export class Room {
         if (this.sitting[position] !== null)
             throw new Error(`There is already somewhere sitting here!`);
         this.standing = this.standing.filter(
-            standingPlayer => !Player.eq(player, standingPlayer));
+            standingPlayer => player.id !== standingPlayer.id);
         this.sitting[position] = player;
     }
     public stand(player: Player): void {
         if (!this.isSitting(player))
             throw new Error(`This player is not sitting!`);
         this.sitting = this.sitting.map(
-            sittingPlayer =>
-                Player.eq(player, sittingPlayer) ? null : sittingPlayer);
+            sittingPlayer => (sittingPlayer && player.id === sittingPlayer.id)
+                                 ? null
+                                 : sittingPlayer);
         this.standing.push(player);
     }
     public enter(player: Player): void {
@@ -130,10 +130,12 @@ export class Room {
         if (this.isSitting(player)) {
             this.sitting = this.sitting.map(
                 sittingPlayer =>
-                    Player.eq(player, sittingPlayer) ? null : sittingPlayer);
+                    (sittingPlayer && player.id === sittingPlayer.id)
+                        ? null
+                        : sittingPlayer);
         } else if (this.isStanding(player)) {
             this.standing = this.standing.filter(
-                standingPlayer => !Player.eq(player, standingPlayer));
+                standingPlayer => player.id !== standingPlayer.id);
         } else {
             throw new Error(`This player is not in the Room!`);
         }
@@ -173,7 +175,7 @@ export class Room {
                 isFinished: this.round.isFinished,
             };
             this.round.getPlayerStates().forEach(ps => {
-                if (Player.eq(ps.player, player)) {
+                if (ps.playerId === player.id) {
                     round.myPlayerState = ps;
                     return;
                 }

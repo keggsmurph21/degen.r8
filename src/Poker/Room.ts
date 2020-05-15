@@ -164,6 +164,9 @@ export class Room {
                 `You cannot start a Round with only 1 eligible player!`);
         this.round = Round.create(this.getDeck(), eligiblePlayers, this.params);
         this.participants = eligiblePlayers;
+        this.participants.forEach(participant => {
+            participant.balance = this.round.getBalance(participant.id);
+        });
         return this.round;
     }
     public makeBet(player: Player, bet: Bet, raiseBy: number = 0): void {

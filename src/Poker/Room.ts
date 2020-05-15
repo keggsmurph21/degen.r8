@@ -1,4 +1,4 @@
-import {clamp, permute} from "../Utils";
+import {clamp, findFirst, permute} from "../Utils";
 import {Card, getShuffledDeck} from "./Card";
 import {
     Bet,
@@ -103,21 +103,11 @@ export class Room {
             anteBet: this.params.anteBet,
         };
     }
-    private getParticipant(playerId: number): Player|null {
-        return this.participants.filter(player => player.id === playerId)[0] ||
-               null;
-    }
     private isSitting(player: Player): boolean {
-        return this.sitting.reduce(
-            (isSitting, nextPlayer) =>
-                isSitting || (nextPlayer && player.id === nextPlayer.id),
-            false);
+        return findFirst(this.sitting, p => p && p.id === player.id) !== null;
     }
     private isStanding(player: Player): boolean {
-        return this.standing.reduce(
-            (isSitting, nextPlayer) =>
-                isSitting || (nextPlayer && player.id === nextPlayer.id),
-            false);
+        return findFirst(this.standing, p => p && p.id === player.id) !== null;
     }
     public sit(player: Player, position: number): void {
         if (!this.isStanding(player))
@@ -179,7 +169,8 @@ export class Room {
     public makeBet(player: Player, bet: Bet, raiseBy: number = 0): void {
         if (this.round === null)
             throw new Error(`There is no round!`);
-        const participant = this.getParticipant(player.id);
+        const participant =
+            findFirst(this.participants, p => p && p.id === player.id);
         if (participant === null)
             throw new Error(`This player is not in the current round!`);
         this.round.makeBet(participant.id, bet, raiseBy);

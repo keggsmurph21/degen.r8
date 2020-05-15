@@ -1,4 +1,4 @@
-import {sortIntoTiers, zip} from "../Utils";
+import {findFirst, sortIntoTiers, zip} from "../Utils";
 import {Card} from "./Card";
 import {BestHand, compareHands, getBestFiveCardHand} from "./Hand";
 
@@ -361,8 +361,8 @@ export class Round {
         this.isFinished = true;
     }
     public getBalance(playerId: number): number {
-        return this.playerStates.filter(ps => ps.playerId === playerId)
-            .pop()
-            .balance;
+        const playerState =
+            findFirst(this.playerStates, ps => ps.playerId === playerId);
+        return playerState ? playerState.balance : null;
     }
 };

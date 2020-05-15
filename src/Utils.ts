@@ -77,3 +77,12 @@ export function permute<T>(ts: T[], permuteBy: number): T[] {
     }
     return ret;
 }
+
+// Return the first element in an array satisfying <predicate>, or null if none
+// match.
+export function findFirst<T>(ts: T[], predicate: (t: T, i: number, ts: T[]) =>
+                                          boolean): T|null {
+    if (!ts)
+        return null;
+    return ts.filter(predicate)[0] || null;
+}

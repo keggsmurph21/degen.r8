@@ -150,6 +150,29 @@ describe("Room", () => {
             .to.equal(STARTING_BALANCE - params.anteBet - params.bigBlindBet);
     });
 
+    it("addBalance", () => {
+        const room = Room.create(params);
+        const players = getPlayers(2);
+        const balanceToAdd = STARTING_BALANCE;
+        room.enter(players[0]);
+        expect(players[0].balance).to.equal(STARTING_BALANCE);
+        expect(() => room.addBalance(players[0], 0)).to.throw();
+        expect(() => room.addBalance(players[0], Infinity)).to.throw();
+        expect(() => room.addBalance(players[1], balanceToAdd)).to.throw();
+        room.addBalance(players[0], balanceToAdd);
+        expect(players[0].balance).to.equal(STARTING_BALANCE + balanceToAdd);
+        room.sit(players[0], 0);
+        room.enter(players[1]);
+        room.sit(players[1], 1);
+        room.startRound();
+        expect(players[1].balance)
+            .to.equal(STARTING_BALANCE - params.anteBet - params.bigBlindBet);
+        room.addBalance(players[1], balanceToAdd);
+        expect(players[1].balance)
+            .to.equal(STARTING_BALANCE - params.anteBet - params.bigBlindBet +
+                      balanceToAdd);
+    });
+
     it("multiple rounds", () => {
         const room =
             Room.create(params, () => [

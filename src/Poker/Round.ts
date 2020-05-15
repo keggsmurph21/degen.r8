@@ -365,4 +365,10 @@ export class Round {
             findFirst(this.playerStates, ps => ps.playerId === playerId);
         return playerState ? playerState.balance : null;
     }
+    public addBalance(playerId: number, credit: number): void {
+        const playerState =
+            findFirst(this.playerStates, ps => ps.playerId === playerId);
+        if (playerState !== null)
+            playerState.balance += credit;
+    }
 };

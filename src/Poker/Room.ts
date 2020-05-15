@@ -103,6 +103,10 @@ export class Room {
             anteBet: this.params.anteBet,
         };
     }
+    private isPlaying(player: Player): boolean {
+        return findFirst(this.participants, p => p && p.id === player.id) !==
+               null;
+    }
     private isSitting(player: Player): boolean {
         return findFirst(this.sitting, p => p && p.id === player.id) !== null;
     }
@@ -185,6 +189,23 @@ export class Room {
         ++this.dealerIndex;
         if (this.dealerIndex === this.params.capacity)
             this.dealerIndex = 0;
+    }
+    public addBalance(player: Player, credit: number): void {
+        let internalPlayer =
+            findFirst(this.participants, p => p && p.id === player.id) ||
+            findFirst(this.sitting, p => p && p.id === player.id) ||
+            findFirst(this.standing, p => p && p.id === player.id);
+        if (internalPlayer === null)
+            throw new Error(
+                "Cannot add balance because player is not at the table!");
+        const minCredit = this.params.minimumBet;
+        const maxCredit = 100 * this.params.bigBlindBet;
+        if (credit !== clamp(minCredit, credit, maxCredit))
+            throw new Error(`Can't add balance outside valid range ([${
+                minCredit}, ${maxCredit}], got ${credit})`);
+        internalPlayer.balance += credit;
+        if (this.isPlaying(internalPlayer))
+            this.round.addBalance(internalPlayer.id, credit);
     }
     public updateParams(params: RoomParameters) { this.params = params; }
     public getSitting(): ReadonlyArray<Player> { return this.sitting; }

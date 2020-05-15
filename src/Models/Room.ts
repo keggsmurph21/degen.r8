@@ -21,15 +21,17 @@ const UPDATE = `
             autoplayInterval = (?),
             numSitting = (?),
             numStanding = (?),
+            dealerIndex = (?),
             sittingJson = (?),
             standingJson = (?),
+            participantsJson = (?),
             roundJson = (?)
         WHERE id = (?)`;
 
 const BY_ID = `
     SELECT id, secret, minimumBet, useBlinds, bigBlindBet, smallBlindBet, useAntes,
                       anteBet, capacity, autoplayInterval, numSitting, numStanding,
-                      sittingJson, standingJson, roundJson
+                      dealerIndex, sittingJson, standingJson, participantsJson, roundJson
         FROM Room
         WHERE id = (?)`;
 
@@ -51,7 +53,9 @@ export async function byId(roomId: number,
     return PokerRoom.deserialize({
         sitting: JSON.parse(row.sittingJson),
         standing: JSON.parse(row.standingJson),
+        participants: JSON.parse(row.participantsJson),
         round: JSON.parse(row.roundJson),
+        dealerIndex: row.dealerIndex,
         capacity: row.capacity,
         autoplayInterval: row.autoplayInterval,
         minimumBet: row.minimumBet,
@@ -81,13 +85,14 @@ export async function save(roomId: number, pokerRoom: PokerRoom,
     const sittingJson = JSON.stringify(serial.sitting);
     const numStanding = serial.standing.filter(p => p !== null).length;
     const standingJson = JSON.stringify(serial.standing);
+    const participantsJson = JSON.stringify(serial.participants);
     const roundJson = JSON.stringify(serial.round);
     const db = await connect();
     const {lastID, changes} = await db.run(
         UPDATE, secret, serial.minimumBet, serial.useBlinds, serial.bigBlindBet,
         serial.smallBlindBet, serial.useAntes, serial.anteBet, serial.capacity,
-        serial.autoplayInterval, numSitting, numStanding, sittingJson,
-        standingJson, roundJson, roomId);
+        serial.autoplayInterval, numSitting, numStanding, serial.dealerIndex,
+        sittingJson, standingJson, roundJson, participantsJson, roomId);
     return lastID;
 }
 
@@ -98,14 +103,14 @@ export async function create(pokerRoom: PokerRoom,
     const sittingJson = JSON.stringify(serial.sitting);
     const numStanding = serial.standing.filter(p => p !== null).length;
     const standingJson = JSON.stringify(serial.standing);
+    const participantsJson = JSON.stringify(serial.participants);
     const roundJson = JSON.stringify(serial.round);
     const db = await connect();
     const {lastID, changes} = await db.run(
         INSERT, secret, serial.minimumBet, serial.useBlinds, serial.bigBlindBet,
         serial.smallBlindBet, serial.useAntes, serial.anteBet, serial.capacity,
-        serial.autoplayInterval, numSitting, numStanding, sittingJson,
-        standingJson, roundJson);
+        serial.autoplayInterval, numSitting, numStanding, serial.dealerIndex,
+        sittingJson, standingJson, participantsJson, roundJson);
     return lastID;
 }
-
 }

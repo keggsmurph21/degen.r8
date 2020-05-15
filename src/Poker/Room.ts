@@ -1,6 +1,13 @@
 import {clamp, permute} from "../Utils";
 import {Card, getShuffledDeck} from "./Card";
-import {Player, Round, RoundParameters, RoundView, SerialRound} from "./Round";
+import {
+    Bet,
+    Player,
+    Round,
+    RoundParameters,
+    RoundView,
+    SerialRound
+} from "./Round";
 
 export const MIN_CAPACITY = 2;
 export const MAX_CAPACITY = 16;
@@ -22,6 +29,7 @@ export interface SerialRoom extends RoomParameters {
     standing: Player[];
     round: SerialRound;
     dealerIndex: number;
+    participants: Player[]|null;
 }
 
 type DeckSupplier = () => Card[];
@@ -30,6 +38,8 @@ export class Room {
 
     private sitting: Player[] = [];
     private standing: Player[] = [];
+    // An array of the Players that are in the current round
+    private participants: Player[]|null = null;
     private round: Round|null = null;
     private dealerIndex: number = 0;
 
@@ -60,6 +70,8 @@ export class Room {
         room.sitting = serial.sitting.slice();
         room.standing = serial.standing.slice();
         room.dealerIndex = serial.dealerIndex;
+        room.participants =
+            serial.participants ? serial.participants.slice() : null;
         room.round =
             serial.round === null ? null : Round.deserialize(serial.round);
         room.params = {
@@ -79,6 +91,7 @@ export class Room {
             sitting: this.sitting.slice(),
             standing: this.standing.slice(),
             dealerIndex: this.dealerIndex,
+            participants: this.participants ? this.participants.slice() : null,
             round: this.round ? this.round.serialize() : null,
             capacity: this.params.capacity,
             autoplayInterval: this.params.autoplayInterval,
@@ -89,6 +102,10 @@ export class Room {
             useAntes: this.params.useAntes,
             anteBet: this.params.anteBet,
         };
+    }
+    private getParticipant(playerId: number): Player|null {
+        return this.participants.filter(player => player.id === playerId)[0] ||
+               null;
     }
     private isSitting(player: Player): boolean {
         return this.sitting.reduce(
@@ -156,11 +173,32 @@ export class Room {
             throw new Error(
                 `You cannot start a Round with only 1 eligible player!`);
         this.round = Round.create(this.getDeck(), eligiblePlayers, this.params);
+        this.participants = eligiblePlayers;
         return this.round;
+    }
+    public makeBet(player: Player, bet: Bet, raiseBy: number = 0): void {
+        if (this.round === null)
+            throw new Error(`There is no round!`);
+        const participant = this.getParticipant(player.id);
+        if (participant === null)
+            throw new Error(`This player is not in the current round!`);
+        this.round.makeBet(participant.id, bet, raiseBy);
+        participant.balance = this.round.getBalance(participant.id);
+        if (!this.round.isFinished)
+            return;
+        this.round = null;
+        this.participants = null;
+        ++this.dealerIndex;
+        if (this.dealerIndex === this.params.capacity)
+            this.dealerIndex = 0;
     }
     public updateParams(params: RoomParameters) { this.params = params; }
     public getSitting(): ReadonlyArray<Player> { return this.sitting; }
     public getStanding(): ReadonlyArray<Player> { return this.standing; }
+    public getParticipants(): ReadonlyArray<Player> {
+        return this.participants;
+    }
+    public getDealerIndex(): number { return this.dealerIndex; }
     public getRound(): Readonly<Round>|null { return this.round; }
     public getParams(): Readonly<RoomParameters> { return this.params; }
     public viewFor(player: Player): RoomView|null {

@@ -4,6 +4,7 @@ import {expect} from "chai";
 
 import {Rank, Suit} from "../Card";
 import {MAX_CAPACITY, MIN_CAPACITY, Room} from "../Room";
+import {Bet} from "../Round";
 
 const MINIMUM_BET = 1.00;
 const STARTING_BALANCE = 20.00;
@@ -39,6 +40,8 @@ describe("Room", () => {
         expect(room.getSitting()).to.deep.equal([null, null, null, null]);
         expect(room.getStanding()).to.deep.equal([]);
         expect(room.getRound()).to.be.null;
+        expect(room.getParticipants()).to.be.null;
+        expect(room.getDealerIndex()).to.equal(0);
     });
 
     it("enter", () => {
@@ -126,6 +129,63 @@ describe("Room", () => {
         room.sit(players[1], 1);
         expect(() => room.startRound()).to.not.throw();
         expect(() => room.startRound()).to.throw();
+        expect(room.getRound().getBalance(0))
+            .to.equal(STARTING_BALANCE - params.anteBet - params.smallBlindBet);
+        expect(room.getRound().getBalance(1))
+            .to.equal(STARTING_BALANCE - params.anteBet - params.bigBlindBet);
+    });
+
+    it("makeBet", () => {
+        const room = Room.create(params);
+        const players = getPlayers(2);
+        room.enter(players[0]);
+        room.sit(players[0], 0);
+        room.enter(players[1]);
+        room.sit(players[1], 1);
+        room.startRound();
+        room.makeBet(players[0], Bet.Call);
+        expect(room.getRound().getBalance(0))
+            .to.equal(STARTING_BALANCE - params.anteBet - params.bigBlindBet);
+        expect(players[0].balance)
+            .to.equal(STARTING_BALANCE - params.anteBet - params.bigBlindBet);
+    });
+
+    it("multiple rounds", () => {
+        const room =
+            Room.create(params, () => [
+                                    // community cards
+                                    {suit: Suit.Diamonds, rank: Rank.Five},
+                                    {suit: Suit.Diamonds, rank: Rank.Six},
+                                    {suit: Suit.Diamonds, rank: Rank.Seven},
+                                    {suit: Suit.Diamonds, rank: Rank.Eight},
+                                    {suit: Suit.Clubs, rank: Rank.Ten},
+                                    // p1 cards
+                                    {suit: Suit.Spades, rank: Rank.Two},
+                                    {suit: Suit.Spades, rank: Rank.Four},
+                                    // p0 cards (flush)
+                                    {suit: Suit.Hearts, rank: Rank.Two},
+                                    {suit: Suit.Diamonds, rank: Rank.Three},
+        ]);
+        const players = getPlayers(2);
+        room.enter(players[0]);
+        room.sit(players[0], 0);
+        room.enter(players[1]);
+        room.sit(players[1], 1);
+        room.startRound();
+        room.makeBet(players[0], Bet.Call);
+        room.makeBet(players[1], Bet.Call);
+        room.makeBet(players[0], Bet.Call);
+        room.makeBet(players[1], Bet.Call);
+        room.makeBet(players[0], Bet.Call);
+        room.makeBet(players[1], Bet.Call);
+        room.makeBet(players[0], Bet.Call);
+        expect(players[0].balance)
+            .to.equal(STARTING_BALANCE + params.anteBet + params.bigBlindBet);
+        expect(players[1].balance)
+            .to.equal(STARTING_BALANCE - params.anteBet - params.bigBlindBet);
+        expect(room.getRound()).to.be.null;
+        expect(room.getParticipants()).to.be.null;
+        expect(room.getDealerIndex()).to.equal(1);
     });
 
     it("(de)serialize", () => {

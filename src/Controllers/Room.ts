@@ -225,7 +225,7 @@ export const postBet = async (req: Request, res: Response) => {
         }
     }
     try {
-        room.getRound().makeBet(user.id, betType, raiseBy);
+        room.makeBet(user, betType, raiseBy);
     } catch (e) {
         console.log(e);
         return res.sendStatus(400);

@@ -25,6 +25,7 @@ export const connect = async () => {
                 useAntes INTEGER NOT NULL,
                 anteBet REAL,
                 capacity INTEGER NOT NULL,
+                dealerIndex INTEGER NOT NULL,
                 autoplayInterval INTEGER NOT NULL,
                 numSitting INTEGER NOT NULL,
                 numStanding INTEGER NOT NULL,

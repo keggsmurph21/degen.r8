@@ -24,8 +24,7 @@ describe("Room", () => {
     const getPlayers = num => {
         let players = [];
         for (let i = 0; i < num; ++i)
-            players.push(
-                {balance: STARTING_BALANCE, id: i, name: `player${i}`});
+            players.push(i);
         return players;
     };
 
@@ -47,30 +46,30 @@ describe("Room", () => {
     it("enter", () => {
         const room = Room.create(params);
         const players = getPlayers(2);
-        room.enter(players[0]);
-        room.enter(players[1]);
+        room.enter(0);
+        room.enter(1);
         expect(room.getSitting()).to.deep.equal([null, null, null, null]);
         expect(room.getStanding()).to.deep.equal(players);
         expect(room.getRound()).to.be.null;
-        expect(() => room.enter(players[0])).to.throw();
-        expect(() => room.enter(players[1])).to.throw();
+        expect(() => room.enter(0)).to.throw();
+        expect(() => room.enter(1)).to.throw();
     });
 
     it("leave", () => {
         const room = Room.create(params);
         const players = getPlayers(1);
-        expect(() => room.leave(players[0])).to.throw()
-        room.enter(players[0]);
+        expect(() => room.leave(0)).to.throw()
+        room.enter(0);
         expect(room.getSitting()).to.deep.equal([null, null, null, null]);
-        expect(room.getStanding()).to.deep.equal([players[0]]);
+        expect(room.getStanding()).to.deep.equal([0]);
         expect(room.getRound()).to.be.null;
-        room.leave(players[0]);
+        room.leave(0);
         expect(room.getSitting()).to.deep.equal([null, null, null, null]);
         expect(room.getStanding()).to.deep.equal([]);
         expect(room.getRound()).to.be.null;
-        room.enter(players[0]);
-        room.sit(players[0], 0);
-        room.leave(players[0]);
+        room.enter(0);
+        room.sit(0, 0);
+        room.leave(0);
         expect(room.getSitting()).to.deep.equal([null, null, null, null]);
         expect(room.getStanding()).to.deep.equal([]);
         expect(room.getRound()).to.be.null;
@@ -79,22 +78,20 @@ describe("Room", () => {
     it("sit", () => {
         const room = Room.create(params);
         const players = getPlayers(2);
-        expect(() => room.sit(players[0], 0)).to.throw();
-        room.enter(players[0]);
-        expect(() => room.sit(players[0], -1)).to.throw();
-        expect(() => room.sit(players[0], 0.5)).to.throw();
-        expect(() => room.sit(players[0], params.capacity + 1)).to.throw();
-        room.sit(players[0], 0);
-        expect(room.getSitting()).to.deep.equal([players[0], null, null, null]);
+        expect(() => room.sit(0, 0)).to.throw();
+        room.enter(0);
+        expect(() => room.sit(0, -1)).to.throw();
+        expect(() => room.sit(0, 0.5)).to.throw();
+        expect(() => room.sit(0, params.capacity + 1)).to.throw();
+        room.sit(0, 0);
+        expect(room.getSitting()).to.deep.equal([0, null, null, null]);
         expect(room.getStanding()).to.deep.equal([]);
         expect(room.getRound()).to.be.null;
-        expect(() => room.sit(players[0], 1)).to.throw();
-        room.enter(players[1]);
-        expect(() => room.sit(players[1], 0)).to.throw();
-        room.sit(players[1], 1);
-        expect(room.getSitting()).to.deep.equal([
-            players[0], players[1], null, null
-        ]);
+        expect(() => room.sit(0, 1)).to.throw();
+        room.enter(1);
+        expect(() => room.sit(1, 0)).to.throw();
+        room.sit(1, 1);
+        expect(room.getSitting()).to.deep.equal([0, 1, null, null]);
         expect(room.getStanding()).to.deep.equal([]);
         expect(room.getRound()).to.be.null;
     });
@@ -102,31 +99,56 @@ describe("Room", () => {
     it("stand", () => {
         const room = Room.create(params);
         const players = getPlayers(1);
-        expect(() => room.stand(players[0])).to.throw();
-        room.enter(players[0]);
-        expect(() => room.stand(players[0])).to.throw();
-        room.sit(players[0], 0);
-        room.stand(players[0]);
+        expect(() => room.stand(0)).to.throw();
+        room.enter(0);
+        expect(() => room.stand(0)).to.throw();
+        room.sit(0, 0);
+        room.stand(0);
         expect(room.getSitting()).to.deep.equal([null, null, null, null]);
-        expect(room.getStanding()).to.deep.equal([players[0]]);
-        room.sit(players[0], 2);
-        expect(room.getSitting()).to.deep.equal([null, null, players[0], null]);
+        expect(room.getStanding()).to.deep.equal([0]);
+        room.sit(0, 2);
+        expect(room.getSitting()).to.deep.equal([null, null, 0, null]);
         expect(room.getStanding()).to.deep.equal([]);
         // leaving directly from sitting
-        room.leave(players[0]);
+        room.leave(0);
         expect(room.getSitting()).to.deep.equal([null, null, null, null]);
         expect(room.getStanding()).to.deep.equal([]);
+    });
+
+    it("addBalance", () => {
+        const room = Room.create(params);
+        const players = getPlayers(2);
+        const balanceToAdd = STARTING_BALANCE;
+        room.enter(0);
+        expect(room.getBalance(0)).to.equal(0);
+        expect(() => room.addBalance(0, 0)).to.throw();
+        expect(() => room.addBalance(0, Infinity)).to.throw();
+        expect(() => room.addBalance(1, STARTING_BALANCE)).to.throw();
+        room.addBalance(0, STARTING_BALANCE);
+        expect(room.getBalance(0)).to.equal(STARTING_BALANCE);
+        room.sit(0, 0);
+        room.enter(1);
+        room.sit(1, 1);
+        expect(room.getBalance(1)).to.equal(0);
+        room.addBalance(1, STARTING_BALANCE);
+        expect(room.getBalance(1)).to.equal(STARTING_BALANCE);
+        room.startRound();
+        expect(room.getBalance(1))
+            .to.equal(STARTING_BALANCE - params.anteBet - params.bigBlindBet);
     });
 
     it("startRound", () => {
         const room = Room.create(params);
         const players = getPlayers(2);
         expect(() => room.startRound()).to.throw();
-        room.enter(players[0]);
-        room.sit(players[0], 0);
+        room.enter(0);
+        room.sit(0, 0);
         expect(() => room.startRound()).to.throw();
-        room.enter(players[1]);
-        room.sit(players[1], 1);
+        room.enter(1);
+        room.sit(1, 1);
+        expect(() => room.startRound()).to.throw();
+        room.addBalance(0, STARTING_BALANCE);
+        room.addBalance(1, STARTING_BALANCE);
         expect(() => room.startRound()).to.not.throw();
         expect(() => room.startRound()).to.throw();
         expect(room.getRound().getBalance(0))
@@ -138,39 +160,18 @@ describe("Room", () => {
     it("makeBet", () => {
         const room = Room.create(params);
         const players = getPlayers(2);
-        room.enter(players[0]);
-        room.sit(players[0], 0);
-        room.enter(players[1]);
-        room.sit(players[1], 1);
+        room.enter(0);
+        room.sit(0, 0);
+        room.enter(1);
+        room.sit(1, 1);
+        room.addBalance(0, STARTING_BALANCE);
+        room.addBalance(1, STARTING_BALANCE);
         room.startRound();
-        room.makeBet(players[0], Bet.Call);
+        room.makeBet(0, Bet.Call);
         expect(room.getRound().getBalance(0))
             .to.equal(STARTING_BALANCE - params.anteBet - params.bigBlindBet);
-        expect(players[0].balance)
+        expect(room.getBalance(0))
             .to.equal(STARTING_BALANCE - params.anteBet - params.bigBlindBet);
-    });
-
-    it("addBalance", () => {
-        const room = Room.create(params);
-        const players = getPlayers(2);
-        const balanceToAdd = STARTING_BALANCE;
-        room.enter(players[0]);
-        expect(players[0].balance).to.equal(STARTING_BALANCE);
-        expect(() => room.addBalance(players[0], 0)).to.throw();
-        expect(() => room.addBalance(players[0], Infinity)).to.throw();
-        expect(() => room.addBalance(players[1], balanceToAdd)).to.throw();
-        room.addBalance(players[0], balanceToAdd);
-        expect(players[0].balance).to.equal(STARTING_BALANCE + balanceToAdd);
-        room.sit(players[0], 0);
-        room.enter(players[1]);
-        room.sit(players[1], 1);
-        room.startRound();
-        expect(players[1].balance)
-            .to.equal(STARTING_BALANCE - params.anteBet - params.bigBlindBet);
-        room.addBalance(players[1], balanceToAdd);
-        expect(players[1].balance)
-            .to.equal(STARTING_BALANCE - params.anteBet - params.bigBlindBet +
-                      balanceToAdd);
     });
 
     it("multiple rounds", () => {
@@ -190,21 +191,23 @@ describe("Room", () => {
                                     {suit: Suit.Diamonds, rank: Rank.Three},
         ]);
         const players = getPlayers(2);
-        room.enter(players[0]);
-        room.sit(players[0], 0);
-        room.enter(players[1]);
-        room.sit(players[1], 1);
+        room.enter(0);
+        room.sit(0, 0);
+        room.enter(1);
+        room.sit(1, 1);
+        room.addBalance(0, STARTING_BALANCE);
+        room.addBalance(1, STARTING_BALANCE);
         room.startRound();
-        room.makeBet(players[0], Bet.Call);
-        room.makeBet(players[1], Bet.Call);
-        room.makeBet(players[0], Bet.Call);
-        room.makeBet(players[1], Bet.Call);
-        room.makeBet(players[0], Bet.Call);
-        room.makeBet(players[1], Bet.Call);
-        room.makeBet(players[0], Bet.Call);
-        expect(players[0].balance)
+        room.makeBet(0, Bet.Call);
+        room.makeBet(1, Bet.Call);
+        room.makeBet(0, Bet.Call);
+        room.makeBet(1, Bet.Call);
+        room.makeBet(0, Bet.Call);
+        room.makeBet(1, Bet.Call);
+        room.makeBet(0, Bet.Call);
+        expect(room.getBalance(0))
             .to.equal(STARTING_BALANCE + params.anteBet + params.bigBlindBet);
-        expect(players[1].balance)
+        expect(room.getBalance(1))
             .to.equal(STARTING_BALANCE - params.anteBet - params.bigBlindBet);
         expect(room.getRound()).to.be.null;
         expect(room.getParticipants()).to.be.null;
@@ -214,12 +217,14 @@ describe("Room", () => {
     it("(de)serialize", () => {
         const room = Room.create(params);
         const players = getPlayers(2);
-        room.enter(players[0]);
-        room.sit(players[0], 0);
-        room.enter(players[1]);
-        room.sit(players[1], 1);
+        room.enter(0);
+        room.sit(0, 0);
+        room.enter(1);
+        room.sit(1, 1);
         expect(Room.deserialize(JSON.parse(JSON.stringify(room.serialize()))))
             .to.deep.equal(room);
+        room.addBalance(0, STARTING_BALANCE);
+        room.addBalance(1, STARTING_BALANCE);
         room.startRound();
         expect(Room.deserialize(JSON.parse(JSON.stringify(room.serialize()))))
             .to.deep.equal(room);
@@ -238,36 +243,49 @@ describe("Room", () => {
                                        {suit: Suit.Hearts, rank: Rank.Queen},
         ]);
         const players = getPlayers(3);
-        expect(room.viewFor(players[0])).to.deep.equal(null);
-        room.enter(players[0]);
-        expect(room.viewFor(players[0])).to.deep.equal({
+        expect(room.viewFor(0)).to.deep.equal(null);
+        room.enter(0);
+        expect(room.viewFor(0)).to.deep.equal({
             params,
             sitting: [null, null, null, null],
-            standing: [players[0]],
+            standing: [0],
+            participants: null,
+            balances: {0: 0},
             round: null,
         });
-        expect(room.viewFor(players[1])).to.deep.equal(null);
-        room.enter(players[1]);
-        room.sit(players[0], 0);
-        expect(room.viewFor(players[0])).to.deep.equal({
+        expect(room.viewFor(1)).to.deep.equal(null);
+        room.enter(1);
+        room.sit(0, 0);
+        expect(room.viewFor(0)).to.deep.equal({
             params,
-            sitting: [players[0], null, null, null],
-            standing: [players[1]],
+            sitting: [0, null, null, null],
+            standing: [1],
+            participants: null,
+            balances: {0: 0, 1: 0},
             round: null,
         });
-        expect(room.viewFor(players[1])).to.deep.equal({
+        expect(room.viewFor(1)).to.deep.equal({
             params,
-            sitting: [players[0], null, null, null],
-            standing: [players[1]],
+            sitting: [0, null, null, null],
+            standing: [1],
+            participants: null,
+            balances: {0: 0, 1: 0},
             round: null,
         });
-        expect(room.viewFor(players[2])).to.deep.equal(null);
-        room.sit(players[1], 1);
+        expect(room.viewFor(2)).to.deep.equal(null);
+        room.sit(1, 1);
+        room.addBalance(0, STARTING_BALANCE);
+        room.addBalance(1, STARTING_BALANCE);
         room.startRound();
-        expect(room.viewFor(players[0])).to.deep.equal({
+        expect(room.viewFor(0)).to.deep.equal({
             params,
-            sitting: [players[0], players[1], null, null],
+            sitting: [0, 1, null, null],
             standing: [],
+            participants: [0, 1],
+            balances: {
+                0: STARTING_BALANCE - params.anteBet - params.smallBlindBet,
+                1: STARTING_BALANCE - params.anteBet - params.bigBlindBet
+            },
             round: {
                 myPlayerState: {
                     index: 0,
@@ -306,11 +324,16 @@ describe("Room", () => {
             }
         });
         expect(Room.deserialize(JSON.parse(JSON.stringify(room.serialize())))
-                   .viewFor(players[1]))
+                   .viewFor(1))
             .to.deep.equal({
                 params,
-                sitting: [players[0], players[1], null, null],
+                sitting: [0, 1, null, null],
                 standing: [],
+                participants: [0, 1],
+                balances: {
+                    0: STARTING_BALANCE - params.anteBet - params.smallBlindBet,
+                    1: STARTING_BALANCE - params.anteBet - params.bigBlindBet
+                },
                 round: {
                     myPlayerState: {
                         index: 1,
@@ -348,12 +371,18 @@ describe("Room", () => {
                     isFinished: false,
                 }
             });
-        expect(room.viewFor(players[2])).to.deep.equal(null);
-        room.enter(players[2]);
-        expect(room.viewFor(players[2])).to.deep.equal({
+        expect(room.viewFor(2)).to.deep.equal(null);
+        room.enter(2);
+        expect(room.viewFor(2)).to.deep.equal({
             params,
-            sitting: [players[0], players[1], null, null],
-            standing: [players[2]],
+            sitting: [0, 1, null, null],
+            standing: [2],
+            participants: [0, 1],
+            balances: {
+                0: STARTING_BALANCE - params.anteBet - params.smallBlindBet,
+                1: STARTING_BALANCE - params.anteBet - params.bigBlindBet,
+                2: 0,
+            },
             round: {
                 myPlayerState: null,
                 otherPlayerStates: [

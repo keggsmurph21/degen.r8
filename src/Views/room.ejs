@@ -6,101 +6,52 @@
     <body>
     <%- include("Components/banner", {path: null}) %>
     <div id="content">
-        <div id="room-id">room id <%= roomId %></div>
-        <form action="/room/<%= roomId %>/leave.rest" method="post">
-            <input type="hidden" name="secret" value="<%= secret %>">
-            <input type="submit" value="leave">
-        </form>
-        <div id="player">player <%= JSON.stringify(player) %></div>
-        <% if (room.round !== null) { %>
-            <div id="round">
-                <div id="community-cards">
-                    <% for (let i = 0; i < 5; ++i) { %>
-                        <pre><%= JSON.stringify(room.round.communityCards[i] || null) %></pre>
-                    <% } %>
-                </div>
-                <div id="my-balance">
-                    <pre>balance: <%= JSON.stringify(room.round.myPlayerState.player.balance) %></pre>
-                </div>
-                <div id="hole-cards">
-                    <pre><%= JSON.stringify(room.round.myPlayerState.holeCards[0]) %></pre>
-                    <pre><%= JSON.stringify(room.round.myPlayerState.holeCards[1]) %></pre>
-                </div>
-                <div id="fold">
-                    <form action="/room/<%= roomId %>/bet.rest" method="post">
-                        <input type="hidden" name="betType" value="fold">
-                        <input type="submit" value="fold">
-                    </form>
-                </div>
-                <div id="call">
-                    <form action="/room/<%= roomId %>/bet.rest" method="post">
-                        <input type="hidden" name="betType" value="call">
-                        <input type="submit" value="call">
-                    </form>
-                </div>
-                <div id="raise">
-                    <form action="/room/<%= roomId %>/bet.rest" method="post">
-                        <input type="hidden" name="betType" value="raise">
-                        <input type="submit" value="raise">
-                        <input type="number" name="raiseBy" value="1.00" min="0.01" max="100.00" step="0.01" value="1.00">
-                    </form>
-                </div>
-            </div>
-        <% } %>
-        <div id="add-balance">
-            <form action="/addBalance.rest" method="post">
-                <input type="number" name="credit" min="0.01" max="100.00" step="0.01" value="20.00">
-                <input type="submit" value="add balance">
-            </form>
-        </div>
+        <button id="leave-button" class="not-implemented" type="button">leave</button>
         <div id="params">
-            <% for (let [key, value] of Object.entries(room.params)) { %>
+            <!--
+                <% for (let [key, value] of Object.entries({} /* room.params */)) { %>
                 <div class="paramEntry" id="param_<%= key %>">
                     <span class="paramKey"><%= key %></span>
                     <span class="paramValue"><%= value %></span>
                 </div>
             <% } %>
+            -->
         </div>
-        <div id="sitting">
-            <% room.sitting.forEach((sittingPlayer, i) => { %>
-                <div class="seat">
-                    <span><%= i %></span>
-                    <% if (sittingPlayer === null) { %>
-                        <form action="/room/<%= roomId %>/sit.rest" method="post">
-                            <input type="hidden" name="secret" value="<%= secret %>">
-                            <input type="hidden" name="seatIndex" value="<%= i %>">
-                            <input type="submit" value="sit">
-                        </form>
-                    <% } else { %>
-                        <%= sittingPlayer.name %>
-                        <% if (sittingPlayer.id === player.id) { %>
-                            <form action="/room/<%= roomId %>/stand.rest" method="post">
-                                <input type="hidden" name="secret" value="<%= secret %>">
-                                <input type="submit" value="stand">
-                            </form>
-                        <% } %>
-                    <% } %>
+        <div id="seats">
+            <% for (let seatIndex = 0; seatIndex < capacity; ++seatIndex) { %>
+                <div class="seat" id="seat-<%= seatIndex %>">
+                    <%= seatIndex %>
+                    <button id="sit-button" class="not-implemented" type="button">sit</button>
+                    <button id="stand-button" class="not-implemented" type="button">stand</button>
                 </div>
-            <% }) %>
-        </div>
-        <div id="standing">
-            <% for (let standingPlayer of room.standing) { %>
-                <% if (standingPlayer.id === player.id) { %>
-                    <% continue; %>
-                <% } %>
-                <%= standingPlayer.name %>
             <% } %>
         </div>
-        <div id="start-round">
-            <form action="/room/<%= roomId %>/startRound.rest" method="post">
-                <input type="hidden" name="secret" value="<%= secret %>">
-                <input type="submit" value="start">
-            </form>
+        <div id="community-cards">
+            <div class="card community-card" id="community-card-0">card0</div>
+            <div class="card community-card" id="community-card-1">card1</div>
+            <div class="card community-card" id="community-card-2">card2</div>
+            <div class="card community-card" id="community-card-3">card3</div>
+            <div class="card community-card" id="community-card-4">card4</div>
         </div>
-        <pre>
-round: <%= JSON.stringify(room.round, null, 4) %>
-<%= JSON.stringify(room, null, 4) %>
-        </pre>
+        <div id="hole-cards">
+            <pre>holeCard0</pre>
+            <pre>holeCard1</pre>
+        </div>
+        <button id="fold-button" class="not-implemented" type="button">fold</button>
+        <button id="call-button" class="not-implemented" type="button">call</button>
+        <button id="raise-button" class="not-implemented" type="button">raise</button>
+        <input id="raise-by" type="number">
+        <button id="add-balance-button" class="not-implemented" type="button">add balance</button>
+        <input id="add-balance-by" type="number">
+        <button id="start-round-button" class="not-implemented" type="button">start</button>
     </div>
+    <script>
+        window.onload = function() {
+            const eles = document.getElementsByClassName("not-implemented");
+            for (let i = 0; i < eles.length; ++i) {
+                eles[i].addEventListener("click", e => alert("Not implemented!"));
+            };
+        };
+    </script>
     </body>
 </html>

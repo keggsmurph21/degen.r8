@@ -6,11 +6,11 @@ import morgan from "morgan";
 import passport from "passport";
 import path from "path";
 
-import {isAuthenticated} from "./Config/Passport";
-
+import {configurePassport} from "./Config/Passport";
 import {homeController} from "./Controllers/Home";
 import {roomController} from "./Controllers/Room";
 import {userController} from "./Controllers/User";
+import {authenticate, isAuthenticated} from "./Services/UserService";
 
 export const app = express();
 
@@ -30,21 +30,24 @@ app.use(flash());
 app.use(express.static(path.join(__dirname, "../public")));
 app.use(morgan("dev"));
 
+configurePassport();
+
 app.get("/", homeController.getHome);
 app.get("/login.do", userController.getLogin);
 app.get("/register.do", userController.getRegister);
 app.get("/lobby.do", isAuthenticated, roomController.getLobby);
 app.get("/room.do", isAuthenticated, roomController.getRoom);
 
-app.post("/login.rest", userController.postLogin);
+app.post("/login.rest", authenticate);
 app.post("/logout.rest", isAuthenticated, userController.postLogout);
 app.post("/register.rest", userController.postRegister);
-app.post("/addBalance.rest", isAuthenticated, userController.postAddBalance);
 app.post("/room/create.rest", isAuthenticated, roomController.postCreate);
-app.post("/room/:roomId/enter.rest", isAuthenticated, roomController.postEnter);
-app.post("/room/:roomId/leave.rest", isAuthenticated, roomController.postLeave);
-app.post("/room/:roomId/sit.rest", isAuthenticated, roomController.postSit);
-app.post("/room/:roomId/stand.rest", isAuthenticated, roomController.postStand);
-app.post("/room/:roomId/startRound.rest", isAuthenticated,
+app.post("/room/addBalance.rest", isAuthenticated,
+         roomController.postAddBalance);
+app.post("/room/enter.rest", isAuthenticated, roomController.postEnter);
+app.post("/room/leave.rest", isAuthenticated, roomController.postLeave);
+app.post("/room/sit.rest", isAuthenticated, roomController.postSit);
+app.post("/room/stand.rest", isAuthenticated, roomController.postStand);
+app.post("/room/startRound.rest", isAuthenticated,
          roomController.postStartRound);
-app.post("/room/:roomId/bet.rest", isAuthenticated, roomController.postBet);
+app.post("/room/bet.rest", isAuthenticated, roomController.postBet);

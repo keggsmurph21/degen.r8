@@ -1,236 +1,185 @@
 import {Request, Response} from "express";
 
 import {Room as RoomModel} from "../Models/Room";
-import {UserModel} from "../Models/User";
-import {MAX_CAPACITY, MIN_CAPACITY, Room as PokerRoom} from "../Poker/Room";
+import {User as UserModel} from "../Models/User";
+import {Room as PokerRoom, RoomParameters} from "../Poker/Room";
 import {Bet, Player} from "../Poker/Round";
-
-const MIN_BET = 0.00;
-const MAX_BET = 100.00;
-const MIN_AUTOPLAY_INTERVAL = 0;
-const MAX_AUTOPLAY_INTERVAL = 60;
-
-function validateFloat(parameterName: string, rawValue: any, minValue: number,
-                       maxValue: number, decimalPrecision: number = 2): number {
-    const offset = 10 ** decimalPrecision;
-    const value =
-        Math.round((parseFloat(rawValue) + Number.EPSILON) * offset) / offset;
-    if (isNaN(value))
-        throw new Error(
-            `invalid ${parameterName}: value '${rawValue}' is not a number`);
-    if (value < minValue || maxValue < value)
-        throw new Error(`invalid ${parameterName}: value '${
-            rawValue}' is outside range ${minValue} to ${maxValue}`);
-    return value;
-}
-
-function validateInt(parameterName: string, rawValue: any, minValue: number,
-                     maxValue: number): number {
-    const value = parseInt(rawValue);
-    if (isNaN(value))
-        throw new Error(
-            `invalid ${parameterName}: value '${rawValue}' is not a number`);
-    if (value < minValue || maxValue < value)
-        throw new Error(`invalid ${parameterName}: value '${
-            rawValue}' is outside range ${minValue} to ${maxValue}`);
-    return value;
-}
+import {
+    addBalance,
+    create,
+    enter,
+    find,
+    leave,
+    makeBet,
+    sit,
+    stand,
+    startRound,
+    summarize,
+    validateBetType,
+    validateRoomParameters,
+} from "../Services/RoomService";
 
 export namespace roomController {
 
 export const getLobby = async (req: Request, res: Response) => {
-    const availableRooms = await RoomModel.summarizeAllWithoutSecret();
-    res.render("lobby", {isLoggedIn: true, availableRooms});
+    const user = req.user as UserModel;
+    try {
+        const availableRooms = await summarize();
+        res.render("lobby", {
+            user: {id: user.id, name: user.name},
+            availableRooms,
+        });
+    } catch (e) {
+        console.log(e);
+        req.flash("errors", e.message);
+        res.redirect("/register.do");
+    }
 };
 
 export const getRoom = async (req: Request, res: Response) => {
-    const roomId = parseInt(req.query.r as any);
-    const secret = (req.query.s as string || "").toString() || null;
-    const room = await RoomModel.byId(roomId, secret);
-    if (room === null)
-        return res.sendStatus(404);
     const user = req.user as UserModel;
-    const {passwordHash, ...player} = user;
-    res.render("room", {
-        isLoggedIn: true,
-        roomId,
-        player,
-        secret,
-        room: room.viewFor(player as Player)
-    });
+    const roomId = req.session.roomId;
+    const secret = req.session.secret;
+    try {
+        const room = await find(user, roomId, secret);
+        res.render("room", {
+            user: {id: user.id, name: user.name},
+            roomId,
+            secret,
+            capacity: room.getParams().capacity,
+        });
+    } catch (e) {
+        console.log(e);
+        req.flash("errors", e.message);
+        res.redirect("/lobby.do");
+    }
 };
 
 export const postCreate = async (req: Request, res: Response) => {
-    let minimumBet, useBlinds, bigBlindBet, smallBlindBet, useAntes, anteBet,
-        capacity, autoplayInterval;
-    const secret = req.body.secret || null;
+    const user = req.user as UserModel;
+    const secret = req.session.secret;
     try {
-        minimumBet =
-            validateFloat("minimumBet", req.body.minimumBet, MIN_BET, MAX_BET);
-        useBlinds = req.body.useBlinds === "on";
-        bigBlindBet = useBlinds
-                          ? validateFloat("bigBlindBet", req.body.bigBlindBet,
-                                          MIN_BET, MAX_BET)
-                          : null;
-        smallBlindBet =
-            useBlinds ? validateFloat("smallBlindBet", req.body.smallBlindBet,
-                                      MIN_BET, MAX_BET)
-                      : null;
-        useAntes = req.body.useAntes === "on";
-        anteBet = useAntes ? validateFloat("anteBet", req.body.anteBet, MIN_BET,
-                                           MAX_BET)
-                           : null;
-        capacity = validateInt("capacity", req.body.capacity, MIN_CAPACITY,
-                               MAX_CAPACITY);
-        autoplayInterval =
-            validateInt("autoplayInterval", req.body.autoplayInterval,
-                        MIN_AUTOPLAY_INTERVAL, MAX_AUTOPLAY_INTERVAL);
+        const params = validateRoomParameters({
+            minimumBet: req.body.minimumBet,
+            useBlinds: req.body.useBlinds,
+            bigBlindBet: req.body.bigBlindBet,
+            smallBlindBet: req.body.smallBlindBet,
+            useAntes: req.body.useAntes,
+            anteBet: req.body.anteBet,
+            capacity: req.body.capacity,
+            autoplayInterval: req.body.autoplayInterval,
+        });
+        const [roomId, room] = await create(user, secret, params);
+        req.session.roomId = roomId;
+        req.session.secret = secret;
+        res.redirect("/room.do");
     } catch (e) {
+        console.log(e);
         req.flash("errors", e.message);
-        return res.redirect("/lobby.do");
+        res.redirect("/lobby.do");
     }
-    const pokerRoom = PokerRoom.create({
-        capacity,
-        autoplayInterval,
-        minimumBet,
-        useBlinds,
-        bigBlindBet,
-        smallBlindBet,
-        useAntes,
-        anteBet,
-    });
-    pokerRoom.enter(req.user as Player);
-    const roomId = await RoomModel.create(pokerRoom, secret);
-    res.redirect(`/room.do?r=${roomId}&s=${secret || ""}`);
 };
 
 export const postEnter = async (req: Request, res: Response) => {
-    const roomId = parseInt(req.params.roomId as any);
-    const secret = req.body.secret || null;
-    const room = await RoomModel.byId(roomId, secret);
-    if (room === null)
-        return res.sendStatus(404);
     const user = req.user as UserModel;
+    const roomId = req.session.roomId;
+    const secret = req.session.secret;
     try {
-        room.enter(req.user as Player);
+        await enter(user, roomId, secret);
+        res.redirect("/room.do");
     } catch (e) {
         console.log(e);
         req.flash("errors", e.message);
+        res.redirect("/lobby.do");
     }
-    await RoomModel.save(roomId, room, secret);
-    res.redirect(`/room.do?r=${roomId}&s=${secret || ""}`);
 };
 
 export const postLeave = async (req: Request, res: Response) => {
-    const roomId = parseInt(req.params.roomId as any);
-    const secret = (req.body.secret as string || "").toString() || null;
-    const room = await RoomModel.byId(roomId, secret);
-    if (room === null)
-        return res.sendStatus(404);
+    const user = req.user as UserModel;
+    const roomId = req.session.roomId;
+    const secret = req.session.secret;
     try {
-        room.leave(req.user as Player);
-        console.log(room);
+        await leave(user, roomId, secret);
+        res.redirect("/room.do");
     } catch (e) {
         console.log(e);
         req.flash("errors", e.message);
+        res.redirect("/lobby.do");
     }
-    await RoomModel.save(roomId, room, secret);
-    res.redirect(`/lobby.do`);
 };
 
 export const postSit = async (req: Request, res: Response) => {
-    const roomId = parseInt(req.params.roomId as any);
-    const secret = (req.body.secret as string || "").toString() || null;
+    const user = req.user as UserModel;
+    const roomId = req.session.roomId;
+    const secret = req.session.secret;
     const seatIndex = parseInt(req.body.seatIndex as any);
-    const room = await RoomModel.byId(roomId, secret);
-    if (room === null)
-        return res.sendStatus(404);
     try {
-        room.sit(req.user as Player, seatIndex);
+        await sit(user, roomId, secret, seatIndex);
+        res.redirect("/room.do");
     } catch (e) {
         console.log(e);
         req.flash("errors", e.message);
+        res.redirect("/lobby.do");
     }
-    await RoomModel.save(roomId, room, secret);
-    res.redirect(`/room.do?r=${roomId}&s=${secret || ""}`);
 };
 
 export const postStand = async (req: Request, res: Response) => {
-    const roomId = parseInt(req.params.roomId as any);
-    const secret = (req.body.secret as string || "").toString() || null;
-    const room = await RoomModel.byId(roomId, secret);
-    if (room === null)
-        return res.sendStatus(404);
+    const user = req.user as UserModel;
+    const roomId = req.session.roomId;
+    const secret = req.session.secret;
     try {
-        room.stand(req.user as Player);
+        await stand(user, roomId, secret);
+        res.redirect("/room.do");
     } catch (e) {
         console.log(e);
         req.flash("errors", e.message);
+        res.redirect("/lobby.do");
     }
-    await RoomModel.save(roomId, room, secret);
-    res.redirect(`/room.do?r=${roomId}&s=${secret || ""}`);
 };
 
 export const postStartRound = async (req: Request, res: Response) => {
-    const roomId = parseInt(req.params.roomId as any);
-    const secret = (req.body.secret as string || "").toString() || null;
-    const room = await RoomModel.byId(roomId, secret);
     const user = req.user as UserModel;
-    if (room === null)
-        return res.sendStatus(404);
-    if (!room.getSitting().reduce((alreadyFound, sittingPlayer) =>
-                                      alreadyFound ||
-                                      (user.id === sittingPlayer.id),
-                                  false)) {
-        return res.sendStatus(403);
-    }
+    const roomId = req.session.roomId;
+    const secret = req.session.secret;
     try {
-        room.startRound();
+        await startRound(user, roomId, secret);
+        res.redirect("/room.do");
     } catch (e) {
         console.log(e);
         req.flash("errors", e.message);
+        res.redirect("/lobby.do");
     }
-    await RoomModel.save(roomId, room, secret);
-    res.redirect(`/room.do?r=${roomId}&s=${secret || ""}`);
 };
 
 export const postBet = async (req: Request, res: Response) => {
-    const roomId = parseInt(req.params.roomId as any);
-    const secret = (req.body.secret as string || "").toString() || null;
-    const room = await RoomModel.byId(roomId, secret);
-    if (room === null)
-        return res.sendStatus(404);
     const user = req.user as UserModel;
-    if (!room.getSitting().reduce((alreadyFound, sittingPlayer) =>
-                                      alreadyFound ||
-                                      (user.id === sittingPlayer.id),
-                                  false)) {
-        return res.sendStatus(403);
-    }
-    const betType = req.body.betType === "fold"
-                        ? Bet.Fold
-                        : req.body.betType === "call"
-                              ? Bet.Call
-                              : req.body.betType === "raise" ? Bet.Raise : null;
-    if (betType === null)
-        return res.sendStatus(400);
-    let raiseBy = 0;
-    if (betType === Bet.Raise) {
-        try {
-            raiseBy =
-                validateFloat("raiseBy", req.body.raiseBy, MIN_BET, MAX_BET);
-        } catch (e) {
-            console.log(e);
-            return res.sendStatus(400);
-        }
-    }
+    const roomId = req.session.roomId;
+    const secret = req.session.secret;
+    const betType = validateBetType(req.body.betType);
+    const raiseBy = parseFloat(req.body.raiseBy);
     try {
-        room.makeBet(user, betType, raiseBy);
+        await makeBet(user, roomId, secret, betType, raiseBy);
+        res.redirect("/room.do");
     } catch (e) {
         console.log(e);
-        return res.sendStatus(400);
+        req.flash("errors", e.message);
+        res.redirect("/lobby.do");
     }
-    await RoomModel.save(roomId, room, secret);
-    res.redirect(`/room.do?r=${roomId}&s=${secret || ""}`);
 };
+
+export const postAddBalance = async (req: Request, res: Response) => {
+    const user = req.user as UserModel;
+    const roomId = req.session.roomId;
+    const secret = req.session.secret;
+    const credit = parseFloat(req.body.credit);
+    try {
+        await addBalance(user, roomId, secret, credit);
+        res.redirect("/room.do");
+    } catch (e) {
+        console.log(e);
+        req.flash("errors", e.message);
+        res.redirect("/lobby.do");
+    }
+};
+
 }

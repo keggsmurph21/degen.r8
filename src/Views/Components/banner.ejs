@@ -6,8 +6,9 @@
         <% } %>
     </div>
     <div id="banner-external-links">
-        <% if (isLoggedIn) { %>
+        <% if (user !== null) { %>
             <div id="banner-logout">
+                <span id="banner-username"><%= user.name %></span>
                 <form action="/logout.rest" method="post">
                     <input type="submit" value="logout">
                 </form>

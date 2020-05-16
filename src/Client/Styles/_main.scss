@@ -1,0 +1,30 @@
+@import "partials/banner";
+@import "partials/colors";
+@import "partials/chat";
+@import "partials/fonts";
+
+body {
+    margin: 0;
+    display: flex;
+    flex-flow: column;
+    min-height: 100vh;
+    overflow-y: auto;
+    background-color: $deep-blue;
+}
+
+a {
+    text-decoration: none;
+    font-weight: bold;
+}
+
+#content {
+    flex-grow: 1;
+    display: flex;
+    flex-flow: row;
+    justify-content: center;
+    align-items: center;
+}
+
+.hidden {
+    display: none;
+}

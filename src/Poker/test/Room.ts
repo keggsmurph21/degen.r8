@@ -3,22 +3,11 @@ import "mocha";
 import {expect} from "chai";
 
 import {Rank, Suit} from "../Card";
-import {MAX_CAPACITY, MIN_CAPACITY, Room} from "../Room";
+import {ADD_BALANCE, CAPACITY} from "../Defaults";
+import {defaultRoomParameters as params, Room} from "../Room";
 import {Bet} from "../Round";
 
-const MINIMUM_BET = 1.00;
-const STARTING_BALANCE = 20.00;
-const params = {
-    capacity: 4,
-    autoplayInterval: 0,
-    // round params
-    minimumBet: MINIMUM_BET,
-    useBlinds: true,
-    bigBlindBet: MINIMUM_BET,
-    smallBlindBet: MINIMUM_BET / 2,
-    useAntes: true,
-    anteBet: MINIMUM_BET / 2,
-};
+const STARTING_BALANCE = ADD_BALANCE.DEFAULT;
 
 describe("Room", () => {
     const getPlayers = num => {
@@ -29,11 +18,11 @@ describe("Room", () => {
     };
 
     it("create", () => {
-        expect(() => Room.create({...params, capacity: MIN_CAPACITY - 1}))
+        expect(() => Room.create({...params, capacity: CAPACITY.MIN - 1}))
             .to.throw();
-        expect(() => Room.create({...params, capacity: MIN_CAPACITY + 0.5}))
+        expect(() => Room.create({...params, capacity: CAPACITY.DEFAULT + 0.5}))
             .to.throw();
-        expect(() => Room.create({...params, capacity: MAX_CAPACITY + 1}))
+        expect(() => Room.create({...params, capacity: CAPACITY.MAX + 1}))
             .to.throw();
         const room = Room.create(params);
         expect(room.getSitting()).to.deep.equal([null, null, null, null]);

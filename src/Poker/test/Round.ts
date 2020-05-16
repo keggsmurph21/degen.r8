@@ -3,18 +3,15 @@ import "mocha";
 import {expect} from "chai";
 
 import {Card, getShuffledDeck, Rank, Suit} from "../Card";
-import {Bet, getWinners, Round} from "../Round";
+import {ADD_BALANCE} from "../Defaults";
+import {
+    Bet,
+    defaultRoundParameters as params,
+    getWinners,
+    Round
+} from "../Round";
 
-const MINIMUM_BET = 1.00;
-const STARTING_BALANCE = 20.00;
-const params = {
-    minimumBet: MINIMUM_BET,
-    useBlinds: true,
-    bigBlindBet: MINIMUM_BET,
-    smallBlindBet: MINIMUM_BET / 2,
-    useAntes: true,
-    anteBet: MINIMUM_BET / 2,
-};
+const STARTING_BALANCE = ADD_BALANCE.DEFAULT;
 
 describe("Round", () => {
     const getPlayers = num => {
@@ -325,7 +322,7 @@ describe("Round", () => {
             const players = getPlayers(4);
             const round = Round.create(getShuffledDeck(), players, params);
             let currentBet = params.anteBet + params.bigBlindBet;
-            let raiseBy = MINIMUM_BET;
+            let raiseBy = params.minimumBet;
             expect(round.getCurrentBet()).to.equal(currentBet);
             expect(() => round.makeBet(3, Bet.Raise, -1)).to.throw();
             expect(() => round.makeBet(3, Bet.Raise, 0)).to.throw();
@@ -351,7 +348,7 @@ describe("Round", () => {
             const players = getPlayers(4);
             const round = Round.create(getShuffledDeck(), players, params);
             let currentBet = params.anteBet + params.bigBlindBet;
-            let raiseBy = MINIMUM_BET;
+            let raiseBy = params.minimumBet;
             // p3 raises
             round.makeBet(3, Bet.Raise, raiseBy);
             currentBet += raiseBy;
@@ -431,7 +428,7 @@ describe("Round", () => {
                 const players = getPlayers(4);
                 const round = Round.create(getShuffledDeck(), players, params);
                 let currentBet = params.anteBet + params.bigBlindBet;
-                let raiseBy = MINIMUM_BET;
+                let raiseBy = params.minimumBet;
                 expect(round.getPots()).to.deep.equal([{
                     maxCumulativeBet: STARTING_BALANCE,
                     maxMarginalBet: STARTING_BALANCE,

@@ -1,0 +1,20 @@
+@import "colors";
+
+#banner {
+    background-color: $pale-purple;
+    padding: 0.3em 0.5em 0.2em;
+    display: flex;
+    flex-flow: row;
+    justify-content: space-between;
+    align-items: center;
+
+    #banner-external-links {
+        display: flex;
+        flex-flow: row nowrap;
+        align-items: center;
+    }
+
+    #banner-username {
+        color: $pale-blue;
+    }
+}

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>degen.r8 &ndash; register</title>
+        <link rel="stylesheet" href="/assets/css/register.css">
+    </head>
+    <body>
+    <%- include("Components/banner", {user: null}) %>
+    <div id="content">
+        <div id="register-container" class="sign-in">
+            <h2 id="title">
+                register for an account
+            </h2>
+            <div id="flash-messages">
+                <% messages.error && messages.error.forEach(message => { %>
+                <div class="flash-message">
+                    <%= message %>
+                </div>
+                <% }); %>
+            </div>
+            <form action="/register.rest" method="post">
+                <div id="username-container">
+                    <label class="hidden" for="username">username</label>
+                    <input id="username" name="name" type="text" required placeholder="username">
+                </div>
+                <div id="password-container">
+                    <label class="hidden" for="password">password</label>
+                    <input id="password" name="password" type="password" required placeholder="password">
+                </div>
+                <div class="submit-container">
+                    <input type="submit" value="register">
+                </div>
+            </form>
+        </div>
+    </div>
+    </body>
+</html>

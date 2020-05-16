@@ -1,0 +1,22 @@
+@import "colors";
+
+.sign-in {
+    background-color: $salmon;
+    display: flex;
+    flex-flow: column;
+    justify-content: center;
+    align-items: center;
+    padding: 4em 6em;
+    #title {
+        color: $deep-blue;
+    }
+    form {
+        display: flex;
+        flex-flow: column;
+        justify-content: center;
+        align-items: center;
+        .submit-container {
+            margin-top: 1em;
+        }
+    }
+}

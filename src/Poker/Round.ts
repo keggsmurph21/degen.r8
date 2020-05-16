@@ -1,5 +1,17 @@
 import {findFirst, sortIntoTiers, zip} from "../Utils";
+
 import {Card} from "./Card";
+import {
+    ADD_BALANCE,
+    ANTE_BET,
+    AUTOPLAY_INTERVAL,
+    BIG_BLIND_BET,
+    CAPACITY,
+    MINIMUM_BET,
+    SMALL_BLIND_BET,
+    USE_ANTES,
+    USE_BLINDS,
+} from "./Defaults";
 import {BestHand, compareHands, getBestFiveCardHand} from "./Hand";
 
 const DEBUG = false;
@@ -89,6 +101,15 @@ export interface RoundParameters {
     useAntes: boolean;
     anteBet: number;
 }
+
+export const defaultRoundParameters: RoundParameters = {
+    minimumBet: MINIMUM_BET.DEFAULT,
+    useBlinds: USE_BLINDS.DEFAULT,
+    bigBlindBet: BIG_BLIND_BET.DEFAULT,
+    smallBlindBet: SMALL_BLIND_BET.DEFAULT,
+    useAntes: USE_ANTES.DEFAULT,
+    anteBet: ANTE_BET.DEFAULT,
+};
 
 interface Pot {
     maxCumulativeBet: number;

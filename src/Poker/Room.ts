@@ -1,9 +1,26 @@
 import {clamp, findFirst, permute, zip} from "../Utils";
+
 import {Card, getShuffledDeck} from "./Card";
+import {
+    ADD_BALANCE,
+    ANTE_BET,
+    AUTOPLAY_INTERVAL,
+    BIG_BLIND_BET,
+    CAPACITY,
+    MINIMUM_BET,
+    SMALL_BLIND_BET,
+    USE_ANTES,
+    USE_BLINDS,
+} from "./Defaults";
 import {Bet, Round, RoundParameters, RoundView, SerialRound} from "./Round";
 
-export const MIN_CAPACITY = 2;
-export const MAX_CAPACITY = 16;
+export interface RoomSummary {
+    id: number;
+    numSitting: number;
+    capacity: number;
+    numStanding: number;
+    minimumBet: number;
+}
 
 interface RoomView {
     params: RoomParameters;
@@ -18,6 +35,17 @@ export interface RoomParameters extends RoundParameters {
     capacity: number;
     autoplayInterval: number;
 }
+
+export const defaultRoomParameters: RoomParameters = {
+    capacity: CAPACITY.DEFAULT,
+    autoplayInterval: AUTOPLAY_INTERVAL.DEFAULT,
+    minimumBet: MINIMUM_BET.DEFAULT,
+    useBlinds: USE_BLINDS.DEFAULT,
+    bigBlindBet: BIG_BLIND_BET.DEFAULT,
+    smallBlindBet: SMALL_BLIND_BET.DEFAULT,
+    useAntes: USE_ANTES.DEFAULT,
+    anteBet: ANTE_BET.DEFAULT,
+};
 
 export interface SerialRoom extends RoomParameters {
     sitting: number[];
@@ -49,9 +77,9 @@ export class Room {
             throw new Error(
                 `Capacity must be an integer (got ${params.capacity})`);
         if (params.capacity !==
-            clamp(MIN_CAPACITY, params.capacity, MAX_CAPACITY))
-            throw new Error(`Capacity outside valid range ([${MIN_CAPACITY}, ${
-                MAX_CAPACITY}], got ${params.capacity})`);
+            clamp(CAPACITY.MIN, params.capacity, CAPACITY.MAX))
+            throw new Error(`Capacity outside valid range ([${CAPACITY.MIN}, ${
+                CAPACITY.MAX}], got ${params.capacity})`);
         const room = new Room();
         room.params = params;
         room.getDeck = getDeck;

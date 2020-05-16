@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>degen.r8 &ndash; room <%= roomId %></title>
+        <script src="/assets/js/degen.r8/room.bundle.js"></script>
+    </head>
+    <body>
+    <%- include("Components/banner", {path: null}) %>
+    <div id="content">
+        <button id="leave-button" class="not-implemented" type="button">leave</button>
+        <div id="params">
+            <!--
+                <% for (let [key, value] of Object.entries({} /* room.params */)) { %>
+                <div class="paramEntry" id="param_<%= key %>">
+                    <span class="paramKey"><%= key %></span>
+                    <span class="paramValue"><%= value %></span>
+                </div>
+            <% } %>
+            -->
+        </div>
+        <div id="seats">
+            <% for (let seatIndex = 0; seatIndex < capacity; ++seatIndex) { %>
+                <div class="seat" id="seat-<%= seatIndex %>">
+                    <%= seatIndex %>
+                    <button id="sit-button" class="not-implemented" type="button">sit</button>
+                    <button id="stand-button" class="not-implemented" type="button">stand</button>
+                </div>
+            <% } %>
+        </div>
+        <div id="community-cards">
+            <div class="card community-card" id="community-card-0">card0</div>
+            <div class="card community-card" id="community-card-1">card1</div>
+            <div class="card community-card" id="community-card-2">card2</div>
+            <div class="card community-card" id="community-card-3">card3</div>
+            <div class="card community-card" id="community-card-4">card4</div>
+        </div>
+        <div id="hole-cards">
+            <pre>holeCard0</pre>
+            <pre>holeCard1</pre>
+        </div>
+        <button id="fold-button" class="not-implemented" type="button">fold</button>
+        <button id="call-button" class="not-implemented" type="button">call</button>
+        <button id="raise-button" class="not-implemented" type="button">raise</button>
+        <input id="raise-by" type="number">
+        <button id="add-balance-button" class="not-implemented" type="button">add balance</button>
+        <input id="add-balance-by" type="number">
+        <button id="start-round-button" class="not-implemented" type="button">start</button>
+    </div>
+    <script>
+        window.onload = function() {
+            const eles = document.getElementsByClassName("not-implemented");
+            for (let i = 0; i < eles.length; ++i) {
+                eles[i].addEventListener("click", e => alert("Not implemented!"));
+            };
+        };
+    </script>
+    </body>
+</html>

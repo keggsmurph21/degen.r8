@@ -1,0 +1,26 @@
+@import "colors";
+
+@media screen and (min-width: 1001px) {
+    html {
+        font-size: 1.2em;
+    }
+}
+
+@media screen and (max-width: 1000px) {
+    html {
+        font-size: 2.4em;
+    }
+}
+
+body {
+    font-family: monospace;
+    color: $pale-purple;
+}
+
+a {
+    color: $pale-yellow;
+}
+
+a:visited {
+    color: $deep-yellow;
+}

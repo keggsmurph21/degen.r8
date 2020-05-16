@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<head>
+    <title>socket.io testing</title>
+    <script src="/assets/js/lib/socket.io/socket.io.js"></script>
+</head>
+<body>
+    <script type="text/javascript">
+        const socket = io("", {query: "roomId=5&userId=57"});
+        socket.on("test", console.log);
+    </script>
+</body>

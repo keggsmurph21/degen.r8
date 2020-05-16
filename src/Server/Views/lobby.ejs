@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>degen.r8 &ndash; lobby</title>
+        <link rel="stylesheet" href="/assets/css/lobby.css">
+        <script src="/assets/js/degen.r8/lobby.bundle.js"></script>
+    </head>
+    <body style="font-family: monospace">
+    <%- include("Components/banner", {path: "lobby", user}) %>
+    <div id="content">
+        <div id="available-rooms-container">
+            <table id="available-rooms">
+                <thead>
+                    <tr>
+                        <th>id</th>
+                        <th>sitting</th>
+                        <th>capacity</th>
+                        <th>standing</th>
+                        <th>minimum bet</th>
+                        <th>join</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (availableRooms.length === 0) { %>
+                        <tr>
+                            <td colspan=6>no available rooms!</td>
+                        </tr>
+                    <% } else { %>
+                        <% availableRooms.forEach(room => { %>
+                            <tr>
+                                <td><%= room.id %></td>
+                                <td><%= room.numSitting %></td>
+                                <td><%= room.capacity %></td>
+                                <td><%= room.numStanding %></td>
+                                <td><%= room.minimumBet %></td>
+                                <td>
+                                    <button id="join-button" class="not-implemented" type="button">join</button>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+        <%
+        function labelFor(key) {
+            return key.replace(/_/g, " ").toLowerCase();
+        }
+        %>
+        <div id="new-room-container">
+            <!--
+            <% Object.entries(params).forEach(([key, value]) => { %>
+                <span class="new-room-param">
+                    <label for="<%= key %>"><%= labelFor(key) %></label>
+                    <input id="param-<%= key %>"
+                        <% if (value.type === ParamType.Bool) { %>
+                           type="checkbox"
+                           <% if (value.DEFAULT) { %> checked <% } %>
+                        <% } else if (value.type === ParamType.Int) { %>
+                            type="range"
+                            min="<%= value.MIN %>"
+                            max="<%= value.MAX %>"
+                            step="1"
+                            value="<%= value.DEFAULT %>"
+                        <% } else if (value.type === ParamType.Float) { %>
+                            type="range"
+                            min="<%= value.MIN %>"
+                            max="<%= value.MAX %>"
+                            step="0.01"
+                            value="<%= value.DEFAULT %>"
+                        <% } %>
+                    >
+                </span>
+            <% }); %>
+            <span class="new-room-param">
+                <label for="secret">room password</label>
+                <input id="secret" type="text">
+            </span>
+            <button id="create-button" class="not-implemented" type="button">create</button>
+            -->
+        </div>
+    </div>
+    <script>
+        window.onload = function() {
+            const eles = document.getElementsByClassName("not-implemented");
+            for (let i = 0; i < eles.length; ++i) {
+                eles[i].addEventListener("click", e => alert("Not implemented!"));
+            };
+            window.main(null, null);
+        };
+    </script>
+    </body>
+</html>

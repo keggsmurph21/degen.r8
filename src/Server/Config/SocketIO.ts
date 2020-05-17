@@ -3,12 +3,17 @@ import {Server} from "http";
 import {Message} from "Interface/Chat";
 import {
     CreateRoomRequest,
+    CreateRoomResponse,
     JoinRoomRequest,
     QueryRoomsRequest
 } from "Interface/Lobby";
 import socketio from "socket.io";
 
-import {summarize, validateRoomParameters} from "../Services/RoomService";
+import {
+    create,
+    summarize,
+    validateRoomParameters
+} from "../Services/RoomService";
 
 import {sessionMiddleware} from "./Session";
 
@@ -24,11 +29,22 @@ async function onJoinRoom(socket: socketio.Socket,
     console.log("onJoinRoom", data);
 }
 
-async function onCreateRoom(socket: socketio.Socket,
+async function onCreateRoom(socket: socketio.Socket, userId: number,
                             data: CreateRoomRequest): Promise<void> {
-    // FIXME: Implement
-    console.log("onCreateRoom", data);
-    console.log(validateRoomParameters(data.params));
+    let res: CreateRoomResponse;
+    try {
+        const params = validateRoomParameters(data.params);
+        const secret = data.params.secret;
+        const [roomId, room] = await create(userId, secret, params);
+        socket.request.session.roomId = roomId;
+        socket.request.session.secret = secret;
+        socket.request.session.save();
+        // FIXME: Emit an event to the channel
+        res = {error: null, roomId};
+    } catch (e) {
+        res = {error: e.message, roomId: null};
+    }
+    socket.emit("create-room", res);
 }
 
 function onMessage(socket: socketio.Socket, data: Message, userId: number,
@@ -45,7 +61,7 @@ export function configureSocketIO(server: Server): void {
         sessionMiddleware(socket.request, {} as Response, next);
     });
 
-    io.on("connection", (socket: socketio.Socket) => {
+    io.on("connection", async (socket: socketio.Socket) => {
         const session = socket.request.session;
         // FIXME: Why is this necessary?
         if (session.connections == null)
@@ -74,7 +90,7 @@ export function configureSocketIO(server: Server): void {
         socket.on("join-room",
                   async data => { await onJoinRoom(socket, data); });
         socket.on("create-room",
-                  async data => { await onCreateRoom(socket, data); });
+                  async data => { await onCreateRoom(socket, userId, data); });
 
         // room channels
         // socket.on("make-bet", ...);

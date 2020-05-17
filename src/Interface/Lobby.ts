@@ -29,7 +29,8 @@ export interface CreateRoomRequest {
 }
 
 export interface CreateRoomResponse {
-    roomId: number;
+    error: string|null;
+    roomId: number|null;
 }
 
 export interface QueryRoomsRequest {}

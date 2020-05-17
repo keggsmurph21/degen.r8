@@ -20,16 +20,16 @@ declare global {
 }
 
 class NewRoomParam {
-    public span: HTMLSpanElement;
+    public div: HTMLDivElement;
     public label: HTMLLabelElement;
     public input: HTMLInputElement;
     constructor(public readonly param: Param) {
-        this.span = document.createElement("span");
+        this.div = document.createElement("div");
 
         this.label = document.createElement("label");
         this.label.setAttribute("for", param.name);
         this.label.innerText = param.displayName;
-        this.span.appendChild(this.label);
+        this.div.appendChild(this.label);
 
         this.input = document.createElement("input");
         this.input.setAttribute("id", param.name);
@@ -63,7 +63,7 @@ class NewRoomParam {
                 this.input.setAttribute("value", param.DEFAULT);
             break;
         }
-        this.span.appendChild(this.input);
+        this.div.appendChild(this.input);
     }
     public getValue(): boolean|number|string {
         switch (this.param.type) {
@@ -101,7 +101,7 @@ class NewRoomParams {
         params.forEach(param => {
             const newRoomParam = new NewRoomParam(param);
             this.newRoomParams[param.name] = newRoomParam;
-            this.container.appendChild(newRoomParam.span);
+            this.container.appendChild(newRoomParam.div);
         });
 
         this.newRoomParams["bigBlindBet"].setControllingParam(
@@ -115,7 +115,7 @@ class NewRoomParams {
         const secretParam = new NewRoomParam(
             new StrParam("secret", "secret", /^[a-zA-Z0-9_.-]{0,16}$/, null));
         this.newRoomParams[secretParam.param.name] = secretParam;
-        this.container.appendChild(secretParam.span);
+        this.container.appendChild(secretParam.div);
 
         this.submitButton = document.createElement("button");
         this.submitButton.setAttribute("type", "button");

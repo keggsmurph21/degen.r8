@@ -18,7 +18,6 @@ import {
 import {Bet} from "Poker/Round";
 
 import {RoomModel} from "../Models/RoomModel";
-import {UserModel} from "../Models/UserModel";
 
 // FIXME: This should probably be in the Room constructor
 export function validateRoomParameters(params: Form): RoomParameters {
@@ -57,88 +56,87 @@ export async function summarize(): Promise<RoomSummary[]> {
     return await RoomModel.summarizeAllWithoutSecret();
 }
 
-export async function find(user: UserModel, roomId: number,
+export async function find(userId: number, roomId: number,
                            secret: string): Promise<RoomObject> {
     const room = await RoomModel.byId(roomId, secret);
     if (room === null)
         throw new Error("Room not found!");
-    if (!room.isIn(user.id))
+    if (!room.isIn(userId))
         throw new Error("Player is not in room!");
     return room;
 }
 
-export async function create(user: UserModel, secret: string,
+export async function create(userId: number, secret: string,
                              params: RoomParameters):
     Promise<[number, RoomObject]> {
     const room = await RoomObject.create(params);
     const roomId = await RoomModel.create(room, secret);
-    room.enter(user.id);
+    room.enter(userId);
     await RoomModel.save(roomId, room, secret);
     return [roomId, room];
 }
 
-export async function enter(user: UserModel, roomId: number,
+export async function enter(userId: number, roomId: number,
                             secret: string): Promise<void> {
     const room = await RoomModel.byId(roomId, secret);
     if (room === null)
         throw new Error("Room not found!");
-    room.enter(user.id);
+    room.enter(userId);
     await RoomModel.save(roomId, room, secret);
 }
 
-export async function leave(user: UserModel, roomId: number,
+export async function leave(userId: number, roomId: number,
                             secret: string): Promise<void> {
     const room = await RoomModel.byId(roomId, secret);
     if (room === null)
         throw new Error("Room not found!");
-    room.leave(user.id);
+    room.leave(userId);
     await RoomModel.save(roomId, room, secret);
 }
 
-export async function sit(user: UserModel, roomId: number, secret: string,
+export async function sit(userId: number, roomId: number, secret: string,
                           seatIndex: number): Promise<void> {
     const room = await RoomModel.byId(roomId, secret);
     if (room === null)
         throw new Error("Room not found!");
-    room.sit(user.id, seatIndex);
+    room.sit(userId, seatIndex);
     await RoomModel.save(roomId, room, secret);
 }
 
-export async function stand(user: UserModel, roomId: number,
+export async function stand(userId: number, roomId: number,
                             secret: string): Promise<void> {
     const room = await RoomModel.byId(roomId, secret);
     if (room === null)
         throw new Error("Room not found!");
-    room.stand(user.id);
+    room.stand(userId);
     await RoomModel.save(roomId, room, secret);
 }
 
-export async function startRound(user: UserModel, roomId: number,
+export async function startRound(userId: number, roomId: number,
                                  secret: string): Promise<void> {
     const room = await RoomModel.byId(roomId, secret);
     if (room === null)
         throw new Error("Room not found!");
-    if (!room.isSitting(user.id))
+    if (!room.isSitting(userId))
         throw new Error("Cannot start round if not sitting!");
     room.startRound();
     await RoomModel.save(roomId, room, secret);
 }
 
-export async function makeBet(user: UserModel, roomId: number, secret: string,
+export async function makeBet(userId: number, roomId: number, secret: string,
                               betType: Bet, raiseBy: number): Promise<void> {
     const room = await RoomModel.byId(roomId, secret);
     if (room === null)
         throw new Error("Room not found!");
-    room.makeBet(user.id, betType, raiseBy);
+    room.makeBet(userId, betType, raiseBy);
     await RoomModel.save(roomId, room, secret);
 }
 
-export async function addBalance(user: UserModel, roomId: number,
-                                 secret: string,
+export async function addBalance(userId: number, roomId: number, secret: string,
                                  credit: number): Promise<void> {
     const room = await RoomModel.byId(roomId, secret);
     if (room === null)
         throw new Error("Room not found!");
-    room.addBalance(user.id, credit);
+    room.addBalance(userId, credit);
     await RoomModel.save(roomId, room, secret);
 }

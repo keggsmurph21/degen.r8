@@ -120,5 +120,4 @@ export const PARAMS: Param[] = [
     SMALL_BLIND_BET,
     USE_ANTES,
     ANTE_BET,
-    ADD_BALANCE,
 ];

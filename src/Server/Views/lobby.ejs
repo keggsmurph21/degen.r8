@@ -43,42 +43,7 @@
                 </tbody>
             </table>
         </div>
-        <%
-        function labelFor(key) {
-            return key.replace(/_/g, " ").toLowerCase();
-        }
-        %>
-        <div id="new-room-container">
-            <!--
-            <% Object.entries(params).forEach(([key, value]) => { %>
-                <span class="new-room-param">
-                    <label for="<%= key %>"><%= labelFor(key) %></label>
-                    <input id="param-<%= key %>"
-                        <% if (value.type === ParamType.Bool) { %>
-                           type="checkbox"
-                           <% if (value.DEFAULT) { %> checked <% } %>
-                        <% } else if (value.type === ParamType.Int) { %>
-                            type="range"
-                            min="<%= value.MIN %>"
-                            max="<%= value.MAX %>"
-                            step="1"
-                            value="<%= value.DEFAULT %>"
-                        <% } else if (value.type === ParamType.Float) { %>
-                            type="range"
-                            min="<%= value.MIN %>"
-                            max="<%= value.MAX %>"
-                            step="0.01"
-                            value="<%= value.DEFAULT %>"
-                        <% } %>
-                    >
-                </span>
-            <% }); %>
-            <span class="new-room-param">
-                <label for="secret">room password</label>
-                <input id="secret" type="text">
-            </span>
-            <button id="create-button" class="not-implemented" type="button">create</button>
-            -->
+        <div id="new-room-params-container">
         </div>
     </div>
     <script>
@@ -87,7 +52,7 @@
             for (let i = 0; i < eles.length; ++i) {
                 eles[i].addEventListener("click", e => alert("Not implemented!"));
             };
-            window.main(null, null);
+            window.main(<%- JSON.stringify(params) %>);
         };
     </script>
     </body>

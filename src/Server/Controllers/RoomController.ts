@@ -6,7 +6,6 @@ import {
     BIG_BLIND_BET,
     CAPACITY,
     MINIMUM_BET,
-    ParamType,
     SMALL_BLIND_BET,
     USE_ANTES,
     USE_BLINDS,
@@ -36,7 +35,6 @@ export const getLobby = async (req: Request, res: Response) => {
         res.render("lobby", {
             user: {id: user.id, name: user.name},
             availableRooms,
-            ParamType,
             params: {
                 ADD_BALANCE,
                 ANTE_BET,

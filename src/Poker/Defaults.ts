@@ -4,15 +4,16 @@ export enum ParamType {
     Bool = 0,
     Int,
     Float,
+    Str,
 }
 
-interface Param<T> {
+interface IParam<T> {
     type: ParamType;
     DEFAULT: T;
     validate(any): T;
 }
 
-class BoolParam implements Param<boolean> {
+class BoolParam implements IParam<boolean> {
     public readonly type = ParamType.Bool;
     constructor(public readonly DEFAULT: boolean) {}
     validate(originalValue: any): boolean {
@@ -23,7 +24,7 @@ class BoolParam implements Param<boolean> {
     }
 }
 
-class IntParam implements Param<number> {
+class IntParam implements IParam<number> {
     public readonly type = ParamType.Int;
     constructor(public readonly MIN: number, public readonly DEFAULT: number,
                 public readonly MAX: number) {}
@@ -38,7 +39,7 @@ class IntParam implements Param<number> {
     }
 }
 
-class FloatParam implements Param<number> {
+class FloatParam implements IParam<number> {
     public readonly type = ParamType.Float;
     constructor(public readonly MIN: number, public readonly DEFAULT: number,
                 public readonly MAX: number,
@@ -56,6 +57,20 @@ class FloatParam implements Param<number> {
         return value;
     }
 }
+
+export class StrParam implements IParam<string> {
+    public readonly type = ParamType.Str;
+    constructor(public readonly PATTERN: RegExp,
+                public readonly DEFAULT: string|null) {}
+    validate(originalValue: any): string {
+        if (!originalValue.toString().test(this.PATTERN))
+            throw new Error(`value '${originalValue}' doesn't match pattern ${
+                this.PATTERN}`);
+        return originalValue;
+    }
+}
+
+export type Param = BoolParam|IntParam|FloatParam|StrParam;
 
 export const CAPACITY = new IntParam(2, 4, 16);
 export const AUTOPLAY_INTERVAL = new IntParam(0, 10, 60);

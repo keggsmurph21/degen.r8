@@ -15,10 +15,9 @@ module.exports = {
         }],
     },
     resolve: {
+        modules: ["src", "node_modules"],
         extensions: [".js", ".ts"],
     },
-    output: {
-        filename: "[name].bundle.js",
-        path: path.resolve(__dirname, "dist")
-    },
+    output:
+        {filename: "[name].bundle.js", path: path.resolve(__dirname, "dist")},
 };

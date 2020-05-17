@@ -58,7 +58,7 @@ export async function summarize(): Promise<RoomSummary[]> {
 
 export async function find(userId: number, roomId: number,
                            secret: string): Promise<RoomObject> {
-    const room = await RoomModel.byId(roomId, secret);
+    const room = await RoomModel.byId(roomId, secret || null);
     if (room === null)
         throw new Error("Room not found!");
     if (!room.isIn(userId))
@@ -70,73 +70,73 @@ export async function create(userId: number, secret: string,
                              params: RoomParameters):
     Promise<[number, RoomObject]> {
     const room = await RoomObject.create(params);
-    const roomId = await RoomModel.create(room, secret);
+    const roomId = await RoomModel.create(room, secret || null);
     room.enter(userId);
-    await RoomModel.save(roomId, room, secret);
+    await RoomModel.save(roomId, room, secret || null);
     return [roomId, room];
 }
 
 export async function enter(userId: number, roomId: number,
                             secret: string): Promise<void> {
-    const room = await RoomModel.byId(roomId, secret);
+    const room = await RoomModel.byId(roomId, secret || null);
     if (room === null)
         throw new Error("Room not found!");
     room.enter(userId);
-    await RoomModel.save(roomId, room, secret);
+    await RoomModel.save(roomId, room, secret || null);
 }
 
 export async function leave(userId: number, roomId: number,
                             secret: string): Promise<void> {
-    const room = await RoomModel.byId(roomId, secret);
+    const room = await RoomModel.byId(roomId, secret || null);
     if (room === null)
         throw new Error("Room not found!");
     room.leave(userId);
-    await RoomModel.save(roomId, room, secret);
+    await RoomModel.save(roomId, room, secret || null);
 }
 
 export async function sit(userId: number, roomId: number, secret: string,
                           seatIndex: number): Promise<void> {
-    const room = await RoomModel.byId(roomId, secret);
+    const room = await RoomModel.byId(roomId, secret || null);
     if (room === null)
         throw new Error("Room not found!");
     room.sit(userId, seatIndex);
-    await RoomModel.save(roomId, room, secret);
+    await RoomModel.save(roomId, room, secret || null);
 }
 
 export async function stand(userId: number, roomId: number,
                             secret: string): Promise<void> {
-    const room = await RoomModel.byId(roomId, secret);
+    const room = await RoomModel.byId(roomId, secret || null);
     if (room === null)
         throw new Error("Room not found!");
     room.stand(userId);
-    await RoomModel.save(roomId, room, secret);
+    await RoomModel.save(roomId, room, secret || null);
 }
 
 export async function startRound(userId: number, roomId: number,
                                  secret: string): Promise<void> {
-    const room = await RoomModel.byId(roomId, secret);
+    const room = await RoomModel.byId(roomId, secret || null);
     if (room === null)
         throw new Error("Room not found!");
     if (!room.isSitting(userId))
         throw new Error("Cannot start round if not sitting!");
     room.startRound();
-    await RoomModel.save(roomId, room, secret);
+    await RoomModel.save(roomId, room, secret || null);
 }
 
 export async function makeBet(userId: number, roomId: number, secret: string,
                               betType: Bet, raiseBy: number): Promise<void> {
-    const room = await RoomModel.byId(roomId, secret);
+    const room = await RoomModel.byId(roomId, secret || null);
     if (room === null)
         throw new Error("Room not found!");
     room.makeBet(userId, betType, raiseBy);
-    await RoomModel.save(roomId, room, secret);
+    await RoomModel.save(roomId, room, secret || null);
 }
 
 export async function addBalance(userId: number, roomId: number, secret: string,
                                  credit: number): Promise<void> {
-    const room = await RoomModel.byId(roomId, secret);
+    const room = await RoomModel.byId(roomId, secret || null);
     if (room === null)
         throw new Error("Room not found!");
     room.addBalance(userId, credit);
-    await RoomModel.save(roomId, room, secret);
+    await RoomModel.save(roomId, room, secret || null);
 }

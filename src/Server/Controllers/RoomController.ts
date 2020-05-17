@@ -21,10 +21,10 @@ import {
 export const getLobby = async (req: Request, res: Response) => {
     const user = req.user as UserModel;
     try {
-        const availableRooms = await summarize();
+        const rooms = await summarize();
         res.render("lobby", {
             user: {id: user.id, name: user.name},
-            availableRooms,
+            rooms,
             params: PARAMS,
         });
     } catch (e) {

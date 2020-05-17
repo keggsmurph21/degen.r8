@@ -3,8 +3,8 @@ import {Room as RoomObject, RoomSummary} from "Poker/Room";
 import {connect} from "../Config/Database";
 
 const INSERT = `
-    INSERT INTO Room (secret, capacity, numSitting, numStanding, json)
-        VALUES (?, ?, ?, ?, ?)`;
+    INSERT INTO Room (secret, capacity, numSitting, numStanding, minimumBet, json)
+        VALUES (?, ?, ?, ?, ?, ?)`;
 
 const UPDATE = `
     UPDATE Room
@@ -12,16 +12,17 @@ const UPDATE = `
             capacity = (?),
             numSitting = (?),
             numStanding = (?),
+            minimumBet = (?),
             json = (?)
         WHERE id = (?)`;
 
 const BY_ID = `
-    SELECT id, secret, capacity, numSitting, numStanding, json
+    SELECT id, secret, capacity, numSitting, numStanding, minimumBet, json
         FROM Room
         WHERE id = (?)`;
 
 const SUMMARIZE_ALL_WITHOUT_SECRET = `
-    SELECT id, capacity, numSitting, numStanding
+    SELECT id, capacity, numSitting, numStanding, minimumBet
         FROM Room
         WHERE secret IS NULL`;
 
@@ -49,10 +50,11 @@ export async function save(roomId: number, room: RoomObject,
     const capacity = room.getParams().capacity;
     const numSitting = room.getSitting().filter(p => p !== null).length;
     const numStanding = room.getStanding().filter(p => p !== null).length;
+    const minimumBet = room.getParams().minimumBet;
     const json = JSON.stringify(room.serialize());
     const db = await connect();
-    await db.run(UPDATE, secret, capacity, numSitting, numStanding, json,
-                 roomId);
+    await db.run(UPDATE, secret, capacity, numSitting, numStanding, minimumBet,
+                 json, roomId);
 }
 
 export async function create(room: RoomObject,
@@ -60,10 +62,11 @@ export async function create(room: RoomObject,
     const capacity = room.getParams().capacity;
     const numSitting = room.getSitting().filter(p => p !== null).length;
     const numStanding = room.getStanding().filter(p => p !== null).length;
+    const minimumBet = room.getParams().minimumBet;
     const json = JSON.stringify(room.serialize());
     const db = await connect();
-    const {lastID, changes} =
-        await db.run(INSERT, secret, capacity, numSitting, numStanding, json);
+    const {lastID, changes} = await db.run(INSERT, secret, capacity, numSitting,
+                                           numStanding, minimumBet, json);
     return lastID;
 }
 

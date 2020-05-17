@@ -9,39 +9,7 @@
     <body style="font-family: monospace">
     <%- include("Components/banner", {path: "lobby", user}) %>
     <div id="content">
-        <div id="available-rooms-container">
-            <table id="available-rooms">
-                <thead>
-                    <tr>
-                        <th>id</th>
-                        <th>sitting</th>
-                        <th>capacity</th>
-                        <th>standing</th>
-                        <th>minimum bet</th>
-                        <th>join</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <% if (availableRooms.length === 0) { %>
-                        <tr>
-                            <td colspan=6>no available rooms!</td>
-                        </tr>
-                    <% } else { %>
-                        <% availableRooms.forEach(room => { %>
-                            <tr>
-                                <td><%= room.id %></td>
-                                <td><%= room.numSitting %></td>
-                                <td><%= room.capacity %></td>
-                                <td><%= room.numStanding %></td>
-                                <td><%= room.minimumBet %></td>
-                                <td>
-                                    <button id="join-button" class="not-implemented" type="button">join</button>
-                                </td>
-                            </tr>
-                        <% }); %>
-                    <% } %>
-                </tbody>
-            </table>
+        <div id="rooms-container">
         </div>
         <div id="new-room-params-container">
         </div>

@@ -20,6 +20,7 @@ export const connect = async () => {
                 capacity INTEGER NOT NULL,
                 numSitting INTEGER NOT NULL,
                 numStanding INTEGER NOT NULL,
+                minimumBet INTEGER NOT NULL,
                 json TEXT NOT NULL)`);
     return db;
 };

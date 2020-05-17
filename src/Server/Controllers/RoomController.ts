@@ -1,15 +1,5 @@
 import {Request, Response} from "express";
-import {
-    ADD_BALANCE,
-    ANTE_BET,
-    AUTOPLAY_INTERVAL,
-    BIG_BLIND_BET,
-    CAPACITY,
-    MINIMUM_BET,
-    SMALL_BLIND_BET,
-    USE_ANTES,
-    USE_BLINDS,
-} from "Poker/Defaults";
+import {PARAMS} from "Poker/Defaults";
 
 import {RoomModel} from "../Models/RoomModel";
 import {UserModel} from "../Models/UserModel";
@@ -35,17 +25,7 @@ export const getLobby = async (req: Request, res: Response) => {
         res.render("lobby", {
             user: {id: user.id, name: user.name},
             availableRooms,
-            params: {
-                ADD_BALANCE,
-                ANTE_BET,
-                AUTOPLAY_INTERVAL,
-                BIG_BLIND_BET,
-                CAPACITY,
-                MINIMUM_BET,
-                SMALL_BLIND_BET,
-                USE_ANTES,
-                USE_BLINDS,
-            },
+            params: PARAMS,
         });
     } catch (e) {
         console.log(e);

@@ -8,7 +8,8 @@ import {
 } from "Interface/Lobby";
 import socketio from "socket.io";
 
-import {summarize} from "../Services/RoomService";
+import {summarize, validateRoomParameters} from "../Services/RoomService";
+
 import {sessionMiddleware} from "./Session";
 
 async function onQueryRooms(socket: socketio.Socket,
@@ -27,6 +28,7 @@ async function onCreateRoom(socket: socketio.Socket,
                             data: CreateRoomRequest): Promise<void> {
     // FIXME: Implement
     console.log("onCreateRoom", data);
+    console.log(validateRoomParameters(data.params));
 }
 
 function onMessage(socket: socketio.Socket, data: Message, userId: number,

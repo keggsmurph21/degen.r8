@@ -1,3 +1,4 @@
+import {Form} from "Interface/Lobby";
 import {
     ADD_BALANCE,
     ANTE_BET,
@@ -20,16 +21,7 @@ import {RoomModel} from "../Models/RoomModel";
 import {UserModel} from "../Models/UserModel";
 
 // FIXME: This should probably be in the Room constructor
-export function validateRoomParameters(params: {
-    minimumBet: any,
-    useBlinds: any,
-    bigBlindBet: any,
-    smallBlindBet: any,
-    useAntes: any,
-    anteBet: any,
-    capacity: any,
-    autoplayInterval: any,
-}): RoomParameters {
+export function validateRoomParameters(params: Form): RoomParameters {
     const useBlinds = USE_BLINDS.validate(params.useBlinds);
     const useAntes = USE_BLINDS.validate(params.useAntes);
     return {

@@ -1,5 +1,9 @@
 import {RoomSummary} from "Poker/Room";
 
+export interface Form {
+    [key: string]: any;
+}
+
 export interface DeleteRoom {
     roomId: number;
 }
@@ -21,7 +25,7 @@ export interface JoinRoomResponse {
 }
 
 export interface CreateRoomRequest {
-    roomId: number;
+    params: Form;
 }
 
 export interface CreateRoomResponse {

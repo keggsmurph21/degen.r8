@@ -1,5 +1,5 @@
 import {Form} from "Interface/Lobby";
-import {QueryRoomsResponse} from "Interface/Lobby";
+import {NewRoom, QueryRoomsResponse, UpdateRoom} from "Interface/Lobby";
 import {Param, Params, ParamType, StrParam} from "Poker/Defaults";
 import {RoomSummary} from "Poker/Room";
 
@@ -217,40 +217,6 @@ class RoomsTable {
         });
     }
 }
-/*
-<table>
-    <thead>
-        <tr>
-            <th>id</th>
-            <th>sitting</th>
-            <th>capacity</th>
-            <th>standing</th>
-            <th>minimum bet</th>
-            <th>join</th>
-        </tr>
-    </thead>
-    <tbody id="rooms">
-        <% if (rooms.length === 0) { %>
-            <tr>
-                <td colspan=6>no available rooms!</td>
-            </tr>
-        <% } else { %>
-            <% rooms.forEach(room => { %>
-                <tr>
-                    <td><%= room.id %></td>
-                    <td><%= room.numSitting %></td>
-                    <td><%= room.capacity %></td>
-                    <td><%= room.numStanding %></td>
-                    <td><%= room.minimumBet %></td>
-                    <td>
-                        <button id="join-button" type="button">join</button>
-                    </td>
-                </tr>
-            <% }); %>
-        <% } %>
-    </tbody>
-</table>
-*/
 
 window.main = (params: Param[]) => {
     const socket = connect();
@@ -268,8 +234,9 @@ window.main = (params: Param[]) => {
     // socket.on("new-user", onNewUser);
 
     socket.on("delete-room", onDeleteRoom);
-    socket.on("new-room", onNewRoom);
-    socket.on("update-room", onUpdateRoom);
+    socket.on("new-room", (data: NewRoom) => { roomsTable.update([data]); });
+    socket.on("update-room",
+              (data: UpdateRoom) => { roomsTable.update([data]); });
     socket.on("join-room", onJoinRoom);
     socket.on("create-room", onCreateRoom);
     socket.on("query-rooms",

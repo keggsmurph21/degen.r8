@@ -9,11 +9,19 @@ export interface DeleteRoom {
 }
 
 export interface NewRoom {
-    roomId: number;
+    id: number;
+    capacity: number;
+    numSitting: number;
+    numStanding: number;
+    minimumBet: number;
 }
 
 export interface UpdateRoom {
-    roomId: number;
+    id: number;
+    capacity: number;
+    numSitting: number;
+    numStanding: number;
+    minimumBet: number;
 }
 
 export interface JoinRoomRequest {

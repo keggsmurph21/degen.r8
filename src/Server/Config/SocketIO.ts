@@ -5,6 +5,7 @@ import {
     CreateRoomRequest,
     CreateRoomResponse,
     JoinRoomRequest,
+    NewRoom,
     QueryRoomsRequest
 } from "Interface/Lobby";
 import socketio from "socket.io";
@@ -17,19 +18,20 @@ import {
 
 import {sessionMiddleware} from "./Session";
 
-async function onQueryRooms(socket: socketio.Socket,
+async function onQueryRooms(io: socketio.Server, socket: socketio.Socket,
                             data: QueryRoomsRequest): Promise<void> {
     const rooms = await summarize();
     socket.emit("query-rooms", {rooms});
 }
 
-async function onJoinRoom(socket: socketio.Socket,
+async function onJoinRoom(io: socketio.Server, socket: socketio.Socket,
                           data: JoinRoomRequest): Promise<void> {
     // FIXME: Implement
     console.log("onJoinRoom", data);
 }
 
-async function onCreateRoom(socket: socketio.Socket, userId: number,
+async function onCreateRoom(io: socketio.Server, socket: socketio.Socket,
+                            userId: number,
                             data: CreateRoomRequest): Promise<void> {
     let res: CreateRoomResponse;
     try {
@@ -39,7 +41,16 @@ async function onCreateRoom(socket: socketio.Socket, userId: number,
         socket.request.session.roomId = roomId;
         socket.request.session.secret = secret;
         socket.request.session.save();
-        // FIXME: Emit an event to the channel
+        if (!secret) {
+            const newRoomData: NewRoom = {
+                id: roomId,
+                capacity: room.getParams().capacity,
+                numSitting: room.getSitting().filter(p => p !== null).length,
+                numStanding: room.getStanding().filter(p => p !== null).length,
+                minimumBet: room.getParams().minimumBet,
+            };
+            io.to("lobby").emit("new-room", newRoomData);
+        }
         res = {error: null, roomId};
     } catch (e) {
         res = {error: e.message, roomId: null};
@@ -80,17 +91,22 @@ export function configureSocketIO(server: Server): void {
         const roomId = session.roomId;
         const secret = session.secret;
 
+        const roomName = roomId == null ? "lobby" : ("room-" + roomId);
+
+        socket.join(roomName);
+
         // global channels
         socket.on("message",
                   data => { onMessage(socket, data, userId, roomId); });
 
         // lobby channels
         socket.on("query-rooms",
-                  async data => { await onQueryRooms(socket, data); });
+                  async data => { await onQueryRooms(io, socket, data); });
         socket.on("join-room",
-                  async data => { await onJoinRoom(socket, data); });
-        socket.on("create-room",
-                  async data => { await onCreateRoom(socket, userId, data); });
+                  async data => { await onJoinRoom(io, socket, data); });
+        socket.on(
+            "create-room",
+            async data => { await onCreateRoom(io, socket, userId, data); });
 
         // room channels
         // socket.on("make-bet", ...);

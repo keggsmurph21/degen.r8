@@ -1,12 +1,12 @@
 @import "colors";
 
-@media screen and (min-width: 1001px) {
+@media screen and (min-width: 801px) {
     html {
         font-size: 1.2em;
     }
 }
 
-@media screen and (max-width: 1000px) {
+@media screen and (max-width: 800px) {
     html {
         font-size: 2.4em;
     }

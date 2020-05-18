@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>degen.r8 &ndash; room</title>
+        <link rel="stylesheet" href="./public/css/room.css">
+        <script src="./public/js/degen.r8/room.bundle.js"></script>
+        <link rel="icon" href="./public/images/favicon.ico">
+    </head>
+    <body>
+        <div id="banner">
+            <div id="banner-internal-links">
+                <a href="/">degen.r8</a>
+            </div>
+            <div id="banner-external-links">
+                <span id="banner-username">username</span>
+                <span id="banner-logout">
+                    <form action="/logout.rest" method="post">
+                        <input type="submit" value="logout">
+                    </form>
+                </span>
+            </div>
+        </div>
+        <div id="content">
+            <button id="leave-button" type="button">back to lobby</button>
+            <div id="table-container" style="width:800px;height:800px;">
+                <svg id="table" viewBox="0 0 800 800" xmlns="http://www.w3.org/2000/svg" height="100%" width="100%">
+                    <circle stroke=black stroke-width=10 fill="#119911" cx=400 cy=400 r=350 />
+                </svg>
+            </div>
+            <!--
+                <div id="seats">
+                    <div class="seat" id="seat-0">
+                        0
+                        <button id="sit-button" class="not-implemented" type="button">sit</button>
+                        <button id="stand-button" class="not-implemented" type="button">
+                            stand
+                        </button>
+                    </div>
+                    <div class="seat" id="seat-1">
+                        1
+                        <button id="sit-button" class="not-implemented" type="button">sit</button>
+                        <button id="stand-button" class="not-implemented" type="button">
+                            stand
+                        </button>
+                    </div>
+                    <div class="seat" id="seat-2">
+                        2
+                        <button id="sit-button" class="not-implemented" type="button">sit</button>
+                        <button id="stand-button" class="not-implemented" type="button">
+                            stand
+                        </button>
+                    </div>
+                    <div class="seat" id="seat-3">
+                        3
+                        <button id="sit-button" class="not-implemented" type="button">sit</button>
+                        <button id="stand-button" class="not-implemented" type="button">
+                            stand
+                        </button>
+                    </div>
+                </div>
+                <div id="community-cards">
+                    <div class="card community-card" id="community-card-0">card0</div>
+                    <div class="card community-card" id="community-card-1">card1</div>
+                    <div class="card community-card" id="community-card-2">card2</div>
+                    <div class="card community-card" id="community-card-3">card3</div>
+                    <div class="card community-card" id="community-card-4">card4</div>
+                </div>
+                <div id="hole-cards">
+                    <pre>holeCard0</pre>
+                    <pre>holeCard1</pre>
+                </div>
+                <button id="fold-button" class="not-implemented" type="button">fold</button>
+                <button id="call-button" class="not-implemented" type="button">call</button>
+                <button id="raise-button" class="not-implemented" type="button">raise</button>
+                <input id="raise-by" type="number">
+                <button id="add-balance-button" class="not-implemented" type="button">
+                    add balance
+                </button>
+                <input id="add-balance-by" type="number">
+                <button id="start-round-button" class="not-implemented" type="button">start</button>
+            -->
+        <script>
+            const SVG_NS = "http://www.w3.org/2000/svg";
+            const table = document.getElementById("table");
+            const tableCX = 400;
+            const tableCY = 400;
+            const tableR = 350;
+            const nCircles = 4;
+            for (let i = 0; i < nCircles; ++i) {
+                const circle = document.createElementNS(SVG_NS, "circle");
+                circle.setAttribute("cx", tableCX - tableR * Math.sin(i * 2 * Math.PI / nCircles));
+                circle.setAttribute("cy", tableCY - tableR * Math.cos(i * 2 * Math.PI / nCircles));
+                circle.setAttribute("r", "40");
+                circle.setAttribute("stroke", "black");
+                circle.setAttribute("stroke-width", "5");
+                circle.setAttribute("fill", "#119911");
+                table.appendChild(circle);
+            }
+            const width = 90;
+            const height = width * 4 / 3;
+            function placeRectAt(x, y) {
+                const rect = document.createElementNS(SVG_NS, "rect");
+                rect.setAttribute("x", x - width / 2);
+                rect.setAttribute("width", width);
+                rect.setAttribute("y", y - height / 2);
+                rect.setAttribute("height", height);
+                rect.setAttribute("stroke", "black");
+                rect.setAttribute("stroke-width", "5");
+                rect.setAttribute("fill", "#dedbef");
+                rect.setAttribute("rx", "10");
+                table.appendChild(rect);
+                const text = document.createElementNS(SVG_NS, "text");
+                text.textContent = "10";
+                text.setAttribute("x", x);
+                text.setAttribute("y", y);
+                table.appendChild(text);
+            }
+            placeRectAt(200, 400);
+            placeRectAt(300, 400);
+            placeRectAt(400, 400);
+            placeRectAt(500, 400);
+            placeRectAt(600, 400);
+            placeRectAt(350, 550);
+            placeRectAt(450, 550);
+        </script>
+    </body>
+</html>

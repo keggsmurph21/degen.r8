@@ -1,0 +1,67 @@
+#banner {
+  background-color: #dedbef;
+  padding: 0.3em 0.5em 0.2em;
+  display: flex;
+  flex-flow: row;
+  justify-content: space-between;
+  align-items: center;
+}
+#banner #banner-external-links {
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: center;
+}
+#banner #banner-username {
+  color: #5681b8;
+}
+
+@media screen and (min-width: 801px) {
+  html {
+    font-size: 1.2em;
+  }
+}
+@media screen and (max-width: 800px) {
+  html {
+    font-size: 2.4em;
+  }
+}
+body {
+  font-family: monospace;
+  color: #dedbef;
+}
+
+a {
+  color: #e4e46b;
+}
+
+a:visited {
+  color: #12824a;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  flex-flow: column;
+  min-height: 100vh;
+  overflow-y: auto;
+  background-color: #123456;
+}
+
+a {
+  text-decoration: none;
+  font-weight: bold;
+}
+
+#content {
+  flex-grow: 1;
+  display: flex;
+  flex-flow: row;
+  justify-content: center;
+  align-items: center;
+}
+
+.hidden {
+  display: none;
+}
+
+/*# sourceMappingURL=room.css.map */

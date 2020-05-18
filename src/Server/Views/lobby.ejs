@@ -6,20 +6,14 @@
         <link rel="icon" href="/assets/images/favicon.ico">
         <script src="/assets/js/degen.r8/lobby.bundle.js"></script>
     </head>
-    <body style="font-family: monospace">
-    <%- include("Components/banner", {path: "lobby", user}) %>
+    <body>
+    <%- include("Components/banner", {user}) %>
     <div id="content">
-        <div id="rooms-container">
-        </div>
-        <div id="new-room-params-container">
-        </div>
+        <div id="rooms-container"></div>
+        <div id="new-room-params-container"></div>
     </div>
     <script>
         window.onload = function() {
-            const eles = document.getElementsByClassName("not-implemented");
-            for (let i = 0; i < eles.length; ++i) {
-                eles[i].addEventListener("click", e => alert("Not implemented!"));
-            };
             window.main(<%- JSON.stringify(params) %>);
         };
     </script>

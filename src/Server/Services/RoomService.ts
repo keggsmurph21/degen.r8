@@ -77,12 +77,14 @@ export async function create(userId: number, secret: string,
 }
 
 export async function enter(userId: number, roomId: number,
-                            secret: string): Promise<void> {
+                            secret: string): Promise<RoomObject> {
     const room = await RoomModel.byId(roomId, secret || null);
     if (room === null)
         throw new Error("Room not found!");
     room.enter(userId);
+    console.log(room);
     await RoomModel.save(roomId, room, secret || null);
+    return room;
 }
 
 export async function leave(userId: number, roomId: number,

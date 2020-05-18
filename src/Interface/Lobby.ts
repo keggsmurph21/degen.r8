@@ -26,9 +26,11 @@ export interface UpdateRoom {
 
 export interface JoinRoomRequest {
     roomId: number;
+    secret: string|null;
 }
 
 export interface JoinRoomResponse {
+    error: string|null;
     roomId: number;
 }
 

@@ -39,9 +39,4 @@ export function onJoinRoom(data: JoinRoomResponse) {
 
 export function onCreateRoom(data: CreateRoomResponse) {
     // FIXME: Implement
-    if (data.error) {
-        alert(data.error);
-        return;
-    }
-    window.location.href = "/room.do";
 }

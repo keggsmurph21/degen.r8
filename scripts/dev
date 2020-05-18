@@ -1,0 +1,12 @@
+#!/bin/bash
+
+set -euo pipefail
+
+# run all of the build-things in the background, and
+# don't let `tsc` clear the screen
+npx tsc --watch | sed -u 's/\x1Bc//g' &
+npx webpack --watch &
+npx sass --watch src/Client/Styles/:public/css/ &
+
+# start the server
+npm start

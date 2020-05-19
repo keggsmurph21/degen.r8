@@ -5,6 +5,72 @@
         <link rel="stylesheet" href="./public/css/room.css">
         <script src="./public/js/degen.r8/room.bundle.js"></script>
         <link rel="icon" href="./public/images/favicon.ico">
+        <style>
+#controls {
+    position: absolute;
+    top: 3em;
+    left: 3em;
+}
+
+#table-container {
+    height: calc(100vh - 2.1em);
+    width: 100vw;
+}
+
+#table {
+    stroke: black;
+    stroke-width: 10;
+    fill: #119911;
+}
+
+.button {
+    font-size: 2.4em;
+    font-weight: bold;
+    text-anchor: middle;
+    fill: #dedbef;
+    stroke: black;
+}
+
+.button:hover {
+    cursor: pointer;
+}
+
+.card-down rect {
+    stroke: black;
+    stroke-width: 3;
+    fill: #72717a;
+    opacity: 69%;
+    rx: 10;
+}
+
+.card-up rect {
+    stroke: black;
+    stroke-width: 3;
+    fill: #dedbef;
+    rx: 10;
+}
+
+.card-up text {
+    font-size: 2.4em;
+    text-anchor: middle;
+}
+
+.card-up .diamonds, .card-up .hearts {
+    fill: red;
+}
+
+.caption {
+    font-size: 1.7em;
+    font-weight: bold;
+    text-anchor: middle;
+    fill: #dedbef;
+    stroke: black;
+}
+
+.balance {
+    font-size: 0.8em;
+}
+        </style>
     </head>
     <body>
         <div id="banner">
@@ -21,54 +87,22 @@
             </div>
         </div>
         <div id="content">
-            <button id="leave-button" type="button">back to lobby</button>
-            <div id="table-container" style="width:800px;height:800px;">
-                <svg id="table" viewBox="0 0 800 800" xmlns="http://www.w3.org/2000/svg" height="100%" width="100%">
-                    <circle stroke=black stroke-width=10 fill="#119911" cx=400 cy=400 r=350 />
-                </svg>
+            <!--<button id="leave-button" type="button">back to lobby</button>-->
+            <div id="controls">
+                <div>
+                    nPlayers
+                    <input id="nPlayers" type="range" min=2 max=16 value=9>
+                </div>
+                <div>
+                    state
+                    <input id="state" type="range" min=0 max=5 value=2>
+                </div>
             </div>
+            <div id="table-container"></div>
             <!--
-                <div id="seats">
-                    <div class="seat" id="seat-0">
-                        0
-                        <button id="sit-button" class="not-implemented" type="button">sit</button>
-                        <button id="stand-button" class="not-implemented" type="button">
-                            stand
-                        </button>
-                    </div>
-                    <div class="seat" id="seat-1">
-                        1
-                        <button id="sit-button" class="not-implemented" type="button">sit</button>
-                        <button id="stand-button" class="not-implemented" type="button">
-                            stand
-                        </button>
-                    </div>
-                    <div class="seat" id="seat-2">
-                        2
-                        <button id="sit-button" class="not-implemented" type="button">sit</button>
-                        <button id="stand-button" class="not-implemented" type="button">
-                            stand
-                        </button>
-                    </div>
-                    <div class="seat" id="seat-3">
-                        3
-                        <button id="sit-button" class="not-implemented" type="button">sit</button>
-                        <button id="stand-button" class="not-implemented" type="button">
-                            stand
-                        </button>
-                    </div>
-                </div>
-                <div id="community-cards">
-                    <div class="card community-card" id="community-card-0">card0</div>
-                    <div class="card community-card" id="community-card-1">card1</div>
-                    <div class="card community-card" id="community-card-2">card2</div>
-                    <div class="card community-card" id="community-card-3">card3</div>
-                    <div class="card community-card" id="community-card-4">card4</div>
-                </div>
-                <div id="hole-cards">
-                    <pre>holeCard0</pre>
-                    <pre>holeCard1</pre>
-                </div>
+                <svg id="table" viewBox="0 0 1000 1000" xmlns="http://www.w3.org/2000/svg" height="100%" width="100%">
+                    <circle stroke=black stroke-width=10 fill="#119911" cx=500 cy=500 r=350 />
+                </svg>
                 <button id="fold-button" class="not-implemented" type="button">fold</button>
                 <button id="call-button" class="not-implemented" type="button">call</button>
                 <button id="raise-button" class="not-implemented" type="button">raise</button>
@@ -80,48 +114,241 @@
                 <button id="start-round-button" class="not-implemented" type="button">start</button>
             -->
         <script>
-            const SVG_NS = "http://www.w3.org/2000/svg";
-            const table = document.getElementById("table");
-            const tableCX = 400;
-            const tableCY = 400;
-            const tableR = 350;
-            const nCircles = 4;
-            for (let i = 0; i < nCircles; ++i) {
-                const circle = document.createElementNS(SVG_NS, "circle");
-                circle.setAttribute("cx", tableCX - tableR * Math.sin(i * 2 * Math.PI / nCircles));
-                circle.setAttribute("cy", tableCY - tableR * Math.cos(i * 2 * Math.PI / nCircles));
-                circle.setAttribute("r", "40");
-                circle.setAttribute("stroke", "black");
-                circle.setAttribute("stroke-width", "5");
-                circle.setAttribute("fill", "#119911");
-                table.appendChild(circle);
-            }
-            const width = 90;
-            const height = width * 4 / 3;
-            function placeRectAt(x, y) {
-                const rect = document.createElementNS(SVG_NS, "rect");
-                rect.setAttribute("x", x - width / 2);
-                rect.setAttribute("width", width);
-                rect.setAttribute("y", y - height / 2);
-                rect.setAttribute("height", height);
-                rect.setAttribute("stroke", "black");
-                rect.setAttribute("stroke-width", "5");
-                rect.setAttribute("fill", "#dedbef");
-                rect.setAttribute("rx", "10");
-                table.appendChild(rect);
-                const text = document.createElementNS(SVG_NS, "text");
-                text.textContent = "10";
-                text.setAttribute("x", x);
-                text.setAttribute("y", y);
-                table.appendChild(text);
-            }
-            placeRectAt(200, 400);
-            placeRectAt(300, 400);
-            placeRectAt(400, 400);
-            placeRectAt(500, 400);
-            placeRectAt(600, 400);
-            placeRectAt(350, 550);
-            placeRectAt(450, 550);
+const SPADES_CHAR = "\u2660";
+const CLUBS_CHAR = "\u2663"
+const HEARTS_CHAR = "\u2665";
+const DIAMONDS_CHAR = "\u2666";
+const SUITS = [SPADES_CHAR, CLUBS_CHAR, HEARTS_CHAR, DIAMONDS_CHAR];
+const SVG_NS = "http://www.w3.org/2000/svg";
+
+function randomInRange(min, max) {
+    return min + Math.floor((max - min) * Math.random());
+}
+
+function randomRank() {
+    const rank = randomInRange(2, 15);
+    switch (rank) {
+    case 11: return "J";
+    case 12: return "Q";
+    case 13: return "K";
+    case 14: return "A";
+    default: return rank.toString();
+    }
+}
+
+function randomSuit() {
+    const i = randomInRange(0, 4);
+    return SUITS[i];
+}
+
+function nameOf(suit) {
+    switch (suit) {
+    case CLUBS_CHAR: return "clubs";
+    case DIAMONDS_CHAR: return "diamonds";
+    case HEARTS_CHAR: return "hearts";
+    case SPADES_CHAR: return "spades";
+    }
+}
+
+function randomUsername() {
+    let username = '';
+    const len = randomInRange(6, 25);
+    for (let i = 0; i < len; ++i) {
+        const ch = String.fromCharCode(randomInRange(98, 123));
+        username += ch;
+    }
+    return username;
+}
+
+function renderCardAt(parent, x, y, rank, suit) {
+    const g = document.createElementNS(SVG_NS, "g");
+    g.className.baseVal = suit == null ? "card-down" : "card-up";
+    g.setAttribute("transform", "translate(" + x + "," + y + ")");
+    parent.appendChild(g);
+
+    const rect = document.createElementNS(SVG_NS, "rect");
+    rect.setAttribute("x", -cardWidth / 2);
+    rect.setAttribute("width", cardWidth);
+    rect.setAttribute("y", -cardHeight / 2);
+    rect.setAttribute("height", cardHeight);
+    g.appendChild(rect);
+
+    const text = document.createElementNS(SVG_NS, "text");
+    text.className.baseVal = nameOf(suit);
+    g.appendChild(text);
+
+    const rankSpan = document.createElementNS(SVG_NS, "tspan");
+    rankSpan.textContent = rank;
+    rankSpan.setAttribute("x", 0);
+    rankSpan.setAttribute("dy", "-0.1em");
+    text.appendChild(rankSpan);
+
+    const suitSpan = document.createElementNS(SVG_NS, "tspan");
+    suitSpan.textContent = suit;
+    suitSpan.setAttribute("x", 0);
+    suitSpan.setAttribute("dy", "0.8em");
+    text.appendChild(suitSpan);
+}
+
+function removeChildren(ele) {
+    while (ele.firstChild)
+        ele.removeChild(ele.lastChild);
+}
+
+function offsetFor(i, n, r) {
+    const scaleFactor = 1.35 - n * 0.05;
+    const theta = i * 2 * Math.PI / n - Math.PI / 2;
+    const x = tableRadius * Math.cos(theta) * r / scaleFactor;
+    const y = tableRadius * Math.sin(theta) * r / scaleFactor;
+    const g = document.createElementNS(SVG_NS, "g");
+    g.setAttribute("transform", "translate(" + x + "," + y + ") scale(" + scaleFactor + ")");
+    return g;
+}
+
+const container = document.getElementById("table-container");
+
+const size = 1000;
+const viewBoxOriginX = - size / 2;
+const viewBoxOriginY = - size / 2;
+const viewBoxWidth = size;
+const viewBoxHeight = size
+const viewBox = viewBoxOriginX + " " + viewBoxOriginY + " " + viewBoxWidth + " " + viewBoxHeight;
+
+const tableRadius = viewBoxWidth * 1 / 4;
+const cardWidth = tableRadius / 4;
+const cardHeight = cardWidth * 4 / 3;
+const cardPaddingX = cardWidth / 8;
+
+const svg = document.createElementNS(SVG_NS, "svg");
+svg.setAttribute("xmlns", SVG_NS);
+svg.setAttribute("viewBox", viewBox);
+svg.setAttribute("height", "100%");
+svg.setAttribute("width", "100%");
+container.appendChild(svg);
+
+const table = document.createElementNS(SVG_NS, "circle");
+table.setAttribute("id", "table");
+table.setAttribute("r", tableRadius);
+svg.appendChild(table);
+
+const communityCards = document.createElementNS(SVG_NS, "g");
+communityCards.setAttribute("id", "community-cards");
+svg.appendChild(communityCards);
+
+function renderCommunityCards(numShown) {
+    for (let i = 0; i < 5; ++i) {
+        renderCardAt(communityCards,
+                     (i - 2) * (cardWidth + cardPaddingX),
+                     0,
+                     i < numShown ? randomRank() : null,
+                     i < numShown ? randomSuit() : null);
+    }
+}
+
+const players = document.createElementNS(SVG_NS, "g");
+players.setAttribute("id", "players");
+svg.appendChild(players);
+
+function renderHand(parent, visible) {
+    renderCardAt(parent,
+                 0 - (cardWidth + cardPaddingX) / 2,
+                 0,
+                 visible ? randomRank() : null,
+                 visible ? randomSuit() : null);
+    renderCardAt(parent,
+                 0 + (cardWidth + cardPaddingX) / 2,
+                 0,
+                 visible ? randomRank() : null,
+                 visible ? randomSuit() : null);
+}
+
+function renderUsernameAndBalance(parent) {
+    const caption = document.createElementNS(SVG_NS, "text");
+    caption.className.baseVal = "caption";
+    caption.setAttribute("y", cardHeight * 4 / 5);
+    parent.appendChild(caption);
+
+    const username = document.createElementNS(SVG_NS, "tspan");
+    username.className.baseVal = "username";
+    username.textContent = randomUsername();
+    username.setAttribute("x", 0);
+    username.setAttribute("dy", 0);
+    caption.appendChild(username);
+
+    const balance = document.createElementNS(SVG_NS, "tspan");
+    balance.className.baseVal = "balance";
+    balance.textContent = (randomInRange(0, 10000) / 100).toFixed(2);
+    balance.setAttribute("x", 0);
+    balance.setAttribute("dy", "1em");
+    caption.appendChild(balance);
+}
+
+function renderPlayers(nPlayers, numShown) {
+    for (let i = 0; i < nPlayers; ++i) {
+        const g = offsetFor(i, nPlayers, 1.25);
+        players.appendChild(g);
+        renderHand(g, i < numShown);
+    }
+    for (let i = 0; i < nPlayers; ++i) {
+        const g = offsetFor(i, nPlayers, 1.25);
+        players.appendChild(g);
+        renderUsernameAndBalance(g);
+    }
+}
+
+function renderSeats(nPlayers) {
+    for (let i = 0; i < nPlayers; ++i) {
+        if (i === 0) {
+            const g = offsetFor(i, nPlayers, 1);
+            players.appendChild(g);
+            const button = document.createElementNS(SVG_NS, "text");
+            button.className.baseVal = "button";
+            button.textContent = "stand";
+            g.appendChild(button);
+        } else if (i < nPlayers / 2) {
+            const g = offsetFor(i, nPlayers, 1.25);
+            players.appendChild(g);
+            renderUsernameAndBalance(g);
+        } else {
+            const g = offsetFor(i, nPlayers, 1);
+            players.appendChild(g);
+            const button = document.createElementNS(SVG_NS, "text");
+            button.className.baseVal = "button";
+            button.textContent = "sit";
+            g.appendChild(button);
+        }
+    }
+}
+
+const nPlayersSlider = document.getElementById("nPlayers");
+nPlayersSlider.addEventListener("input", render);
+
+const stateSlider = document.getElementById("state");
+stateSlider.addEventListener("input", render);
+
+function render() {
+    const nPlayers = +nPlayersSlider.value;
+    const state = +stateSlider.value;
+    removeChildren(communityCards);
+    removeChildren(players);
+    switch (state) {
+    case 0:
+        renderCommunityCards(5);
+        renderPlayers(nPlayers, nPlayers);
+        break;
+    case 1:
+        renderCommunityCards(3);
+        renderPlayers(nPlayers, 1);
+        break;
+    case 2:
+        renderSeats(nPlayers);
+        break;
+    default:
+        throw new Error("Not implemented state: " + state);
+    }
+}
+
+render();
         </script>
     </body>
 </html>

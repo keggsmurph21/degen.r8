@@ -86,3 +86,8 @@ export function findFirst<T>(ts: T[], predicate: (t: T, i: number, ts: T[]) =>
         return null;
     return ts.filter(predicate)[0] || null;
 }
+
+// Get a random integer in the range [min, max) (i.e., not right-inclusive)
+export function randomInRange(min: number, max: number): number {
+    return min + Math.floor((max - min) * Math.random());
+}

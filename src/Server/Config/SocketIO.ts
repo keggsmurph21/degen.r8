@@ -42,10 +42,10 @@ async function onJoinRoom(io: socketio.Server, socket: socketio.Socket,
         if (!secret) {
             const updateRoomData: UpdateRoom = {
                 id: roomId,
-                capacity: room.getParams().capacity,
-                numSitting: room.getSitting().filter(p => p !== null).length,
-                numStanding: room.getStanding().filter(p => p !== null).length,
-                minimumBet: room.getParams().minimumBet,
+                capacity: room.params.capacity,
+                numSitting: room.sitting.filter(p => p !== null).length,
+                numStanding: room.standing.filter(p => p !== null).length,
+                minimumBet: room.params.minimumBet,
             };
             io.to("lobby").emit("update-room", updateRoomData);
         }
@@ -70,10 +70,10 @@ async function onCreateRoom(io: socketio.Server, socket: socketio.Socket,
         if (!secret) {
             const newRoomData: NewRoom = {
                 id: roomId,
-                capacity: room.getParams().capacity,
-                numSitting: room.getSitting().filter(p => p !== null).length,
-                numStanding: room.getStanding().filter(p => p !== null).length,
-                minimumBet: room.getParams().minimumBet,
+                capacity: room.params.capacity,
+                numSitting: room.sitting.filter(p => p !== null).length,
+                numStanding: room.standing.filter(p => p !== null).length,
+                minimumBet: room.params.minimumBet,
             };
             io.to("lobby").emit("new-room", newRoomData);
         }

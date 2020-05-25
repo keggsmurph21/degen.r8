@@ -64,4 +64,86 @@ a {
   display: none;
 }
 
+#controls {
+  position: absolute;
+  top: 3em;
+  left: 3em;
+}
+
+#table-container {
+  height: calc(100vh - 2.4em);
+  /* FIXME: Height of #banner */
+  width: 100vw;
+}
+
+#table {
+  stroke: black;
+  stroke-width: 10;
+  fill: #119911;
+}
+
+.card rect {
+  stroke: black;
+  stroke-width: 3;
+}
+.card-down rect {
+  fill: #5d4eb0;
+  opacity: 69%;
+}
+.card-up rect {
+  fill: #dedbef;
+}
+.card-up text {
+  font-size: 2.4em;
+  text-anchor: middle;
+}
+.card-up .diamonds, .card-up .hearts {
+  fill: red;
+}
+
+.caption {
+  font-size: 1.7em;
+  font-weight: bold;
+  text-anchor: middle;
+  fill: #dedbef;
+  stroke: black;
+}
+.caption-empty {
+  font-size: 2.7em;
+}
+
+.balance {
+  font-size: 0.8em;
+}
+
+.button {
+  text-anchor: middle;
+  font-weight: bold;
+}
+.button rect {
+  fill: #dedbef;
+  stroke: black;
+  stroke-width: 3;
+}
+.button:hover {
+  cursor: pointer;
+}
+
+foreignObject {
+  overflow: visible;
+}
+foreignObject label {
+  display: none;
+}
+foreignObject > div {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.slider-view {
+  width: 6ch;
+  text-align: right;
+}
+
 /*# sourceMappingURL=room.css.map */

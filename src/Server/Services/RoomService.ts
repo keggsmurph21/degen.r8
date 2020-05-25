@@ -69,6 +69,7 @@ export async function find(userId: number, roomId: number,
 export async function create(userId: number, secret: string,
                              params: RoomParameters):
     Promise<[number, RoomObject]> {
+    console.log(params);
     const room = await RoomObject.create(params);
     const roomId = await RoomModel.create(room, secret || null);
     room.enter(userId);

@@ -11,11 +11,11 @@ import {connect} from "../SocketIO";
 import {NewRoomParamsForm} from "../UI/Lobby/NewRoomParamsForm";
 import {RoomsTable} from "../UI/Lobby/RoomsTable";
 
-declare global {
-    interface Window {
-        main: (params: Param[]) => void;
-    }
+interface LobbyWindow extends Window {
+    main: (params: Param[]) => void;
 }
+
+declare var window: LobbyWindow;
 
 window.main = (params: Param[]) => {
     const socket = connect(null);

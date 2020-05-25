@@ -25,19 +25,14 @@ export interface Player {
     balance: number;
 }
 
-export interface PublicPlayerState {
+export interface PlayerState {
     index: number;
     playerId: number;
     balance: number;
     hasFolded: boolean;
     maxStakes: number;
+    holeCards: [Card, Card];
 }
-
-export interface PrivatePlayerState extends PublicPlayerState {
-    holeCards: readonly[Card, Card];
-}
-
-export interface PlayerState extends PrivatePlayerState {}
 
 export interface SerialRound {
     playerStates: PlayerState[];
@@ -84,8 +79,7 @@ export function getWinners(playerStates: PlayerState[],
 }
 
 export interface RoundView {
-    myPlayerState: PrivatePlayerState;
-    otherPlayerStates: PublicPlayerState[];
+    playerStates: PlayerState[];
     minimumBet: number;
     communityCards: Card[];
     pots: Pot[];
@@ -111,7 +105,7 @@ export const defaultRoundParameters: RoundParameters = {
     anteBet: ANTE_BET.DEFAULT,
 };
 
-interface Pot {
+export interface Pot {
     maxCumulativeBet: number;
     maxMarginalBet: number;
     marginalBet: number;
@@ -140,12 +134,12 @@ function commitToPot(pot: Pot, ps: PlayerState, balance: number): number {
 }
 
 export class Round {
-    private playerStates: PlayerState[] = [];
+    public playerStates: PlayerState[] = [];
     private deck: Card[];
-    private currentIndex: number = 0;
-    private communityCards: Card[] = [];
-    private pots: Pot[] = [];
-    private didLastRaiseIndex: number = 0;
+    public currentIndex: number = 0;
+    public communityCards: Card[] = [null, null, null, null, null];
+    public pots: Pot[] = [];
+    public didLastRaiseIndex: number = 0;
     public minimumBet: number;
     public isFinished: boolean = false;
     private constructor() {}
@@ -213,30 +207,12 @@ export class Round {
             isFinished: this.isFinished,
         };
     }
-    public getPot(): number {
-        if (this.isFinished)
-            return 0;
-        return this.pots.reduce(
-            (potAcc, pot) =>
-                potAcc + pot.contributions.reduce(
-                             (contribAcc, contrib) => contribAcc + contrib, 0),
-            0);
-    }
-    public getPots(): Pot[] { return this.pots; }
-    public getCommunityCards(): ReadonlyArray<Card> {
-        return this.communityCards;
-    }
     public getCurrentBet(): number {
         return this.pots.reduce((acc, pot) => acc + pot.marginalBet, 0);
     }
     public getAmountAlreadyBet(ps: PlayerState): number {
         return this.pots.reduce((acc, pot) => acc + pot.contributions[ps.index],
                                 0);
-    }
-    public getCurrentIndex(): number { return this.currentIndex; }
-    public getDidLastRaiseIndex(): number { return this.didLastRaiseIndex; }
-    public getPlayerStates(): PlayerState[] {
-        return this.playerStates.slice();
     }
     private commitBet(ps: PlayerState, amountToCommit: number,
                       affectsRoundTotals: boolean = true): void {
@@ -350,15 +326,15 @@ export class Round {
         } while (this.playerStates[this.currentIndex].hasFolded ||
                  this.playerStates[this.currentIndex].balance === 0)
         if (this.didLastRaiseIndex === this.currentIndex) {
-            if (this.communityCards.length === 0) {
-                this.communityCards.push(this.deck.pop());
-                this.communityCards.push(this.deck.pop());
-                this.communityCards.push(this.deck.pop());
-            } else if (this.communityCards.length === 3) {
-                this.communityCards.push(this.deck.pop());
-            } else if (this.communityCards.length === 4) {
-                this.communityCards.push(this.deck.pop());
-            } else if (this.communityCards.length === 5) {
+            if (this.communityCards[0] === null) {
+                this.communityCards[0] = this.deck.pop();
+                this.communityCards[1] = this.deck.pop();
+                this.communityCards[2] = this.deck.pop();
+            } else if (this.communityCards[3] === null) {
+                this.communityCards[3] = this.deck.pop();
+            } else if (this.communityCards[4] === null) {
+                this.communityCards[4] = this.deck.pop();
+            } else {
                 this.doFinish();
             }
         }

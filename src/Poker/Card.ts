@@ -47,3 +47,48 @@ export function getShuffledDeck(): Card[] {
         suit => { forEachRank(rank => { cards.push({suit: suit, rank}); }); });
     return shuffled(cards);
 }
+
+export function charForSuit(suit: Suit): string {
+    switch (suit) {
+    case Suit.Clubs:
+        return "\u2663";
+    case Suit.Diamonds:
+        return "\u2666";
+    case Suit.Hearts:
+        return "\u2665";
+    case Suit.Spades:
+        return "\u2660";
+    }
+    return null;
+}
+
+export function displayNameForSuit(suit: Suit): string {
+    switch (suit) {
+    case Suit.Clubs:
+        return "clubs";
+    case Suit.Diamonds:
+        return "diamonds";
+    case Suit.Hearts:
+        return "hearts";
+    case Suit.Spades:
+        return "spades";
+    }
+    return null;
+}
+
+export function charForRank(rank: Rank): string {
+    if (!rank)
+        return null;
+    switch (rank) {
+    case Rank.Jack:
+        return "J";
+    case Rank.Queen:
+        return "Q";
+    case Rank.King:
+        return "K";
+    case Rank.Ace:
+        return "A";
+    default:
+        return rank.toString();
+    }
+}

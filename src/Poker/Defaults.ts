@@ -1,14 +1,10 @@
 import {clamp} from "Utils";
 
-export enum ParamType {
-    Bool = 0,
-    Int,
-    Float,
-    Str,
-}
+export type ParamType = boolean|number|string;
+type TypeName = "bool"|"int"|"float"|"str";
 
-interface IParam<T> {
-    type: ParamType;
+export interface IParam<T extends ParamType> {
+    type: TypeName;
     DEFAULT: T;
     name: string;        // camelCase
     displayName: string; // human readable
@@ -16,7 +12,7 @@ interface IParam<T> {
 }
 
 class BoolParam implements IParam<boolean> {
-    public readonly type = ParamType.Bool;
+    public readonly type = "bool";
     constructor(public readonly name: string,
                 public readonly displayName: string,
                 public readonly DEFAULT: boolean) {}
@@ -29,7 +25,7 @@ class BoolParam implements IParam<boolean> {
 }
 
 class IntParam implements IParam<number> {
-    public readonly type = ParamType.Int;
+    public readonly type = "int";
     constructor(public readonly name: string,
                 public readonly displayName: string,
                 public readonly MIN: number, public readonly DEFAULT: number,
@@ -49,7 +45,7 @@ class IntParam implements IParam<number> {
 }
 
 class FloatParam implements IParam<number> {
-    public readonly type = ParamType.Float;
+    public readonly type = "float";
     constructor(public readonly name: string,
                 public readonly displayName: string,
                 public readonly MIN: number, public readonly DEFAULT: number,
@@ -73,7 +69,7 @@ class FloatParam implements IParam<number> {
 }
 
 export class StrParam implements IParam<string> {
-    public readonly type = ParamType.Str;
+    public readonly type = "str";
     constructor(public readonly name: string,
                 public readonly displayName: string,
                 public readonly PATTERN: RegExp,
@@ -108,8 +104,6 @@ export const USE_ANTES = new BoolParam("useAntes", "use antes", true);
 export const ANTE_BET =
     new FloatParam("anteBet", "ante bet", MINIMUM_BET.MIN / 2,
                    MINIMUM_BET.DEFAULT, MINIMUM_BET.MAX);
-export const ADD_BALANCE = new FloatParam(
-    "addBalance", "add balance", MINIMUM_BET.MIN, 20.00, 10 * MINIMUM_BET.MAX);
 
 export const PARAMS: Param[] = [
     CAPACITY,
@@ -121,3 +115,6 @@ export const PARAMS: Param[] = [
     USE_ANTES,
     ANTE_BET,
 ];
+
+export const ADD_BALANCE = new FloatParam(
+    "addBalance", "add balance", MINIMUM_BET.MIN, 20.00, 10 * MINIMUM_BET.MAX);

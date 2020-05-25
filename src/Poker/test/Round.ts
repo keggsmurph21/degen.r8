@@ -37,7 +37,7 @@ describe("Round", () => {
                 // order of big and small blinds should be reversed for 2p hands
                 const players = getPlayers(2);
                 const round = Round.create(getShuffledDeck(), players, params);
-                expect(round.getPots()).to.deep.equal([{
+                expect(round.pots).to.deep.equal([{
                     maxCumulativeBet: STARTING_BALANCE,
                     maxMarginalBet: STARTING_BALANCE,
                     marginalBet: params.anteBet + params.bigBlindBet,
@@ -46,9 +46,6 @@ describe("Round", () => {
                         params.anteBet + params.bigBlindBet,
                     ],
                 }]);
-                expect(round.getPot())
-                    .to.equal(2 * params.anteBet + params.smallBlindBet +
-                              params.bigBlindBet);
                 expect(round.getBalance(0))
                     .to.equal(STARTING_BALANCE - params.anteBet -
                               params.smallBlindBet);
@@ -59,7 +56,7 @@ describe("Round", () => {
             it("three players", () => {
                 const players = getPlayers(3);
                 const round = Round.create(getShuffledDeck(), players, params);
-                expect(round.getPots()).to.deep.equal([{
+                expect(round.pots).to.deep.equal([{
                     maxCumulativeBet: STARTING_BALANCE,
                     maxMarginalBet: STARTING_BALANCE,
                     marginalBet: params.anteBet + params.bigBlindBet,
@@ -69,9 +66,6 @@ describe("Round", () => {
                         params.anteBet + params.bigBlindBet,
                     ],
                 }]);
-                expect(round.getPot())
-                    .to.equal(3 * params.anteBet + params.smallBlindBet +
-                              params.bigBlindBet);
                 expect(round.getBalance(0))
                     .to.equal(STARTING_BALANCE - params.anteBet);
                 expect(round.getBalance(1))
@@ -84,7 +78,7 @@ describe("Round", () => {
             it("four players", () => {
                 const players = getPlayers(4);
                 const round = Round.create(getShuffledDeck(), players, params);
-                expect(round.getPots()).to.deep.equal([{
+                expect(round.pots).to.deep.equal([{
                     maxCumulativeBet: STARTING_BALANCE,
                     maxMarginalBet: STARTING_BALANCE,
                     marginalBet: params.anteBet + params.bigBlindBet,
@@ -93,9 +87,6 @@ describe("Round", () => {
                         params.anteBet + params.bigBlindBet, params.anteBet
                     ],
                 }]);
-                expect(round.getPot())
-                    .to.equal(4 * params.anteBet + params.smallBlindBet +
-                              params.bigBlindBet);
                 expect(round.getBalance(0))
                     .to.equal(STARTING_BALANCE - params.anteBet);
                 expect(round.getBalance(1))
@@ -121,7 +112,7 @@ describe("Round", () => {
             const round = Round.create(getShuffledDeck(), players, params);
             round.makeBet(3, Bet.Fold);
             round.makeBet(0, Bet.Fold);
-            expect(round.getPots()).to.deep.equal([{
+            expect(round.pots).to.deep.equal([{
                 maxCumulativeBet: STARTING_BALANCE,
                 maxMarginalBet: STARTING_BALANCE,
                 marginalBet: params.anteBet + params.bigBlindBet,
@@ -132,7 +123,6 @@ describe("Round", () => {
             }]);
             round.makeBet(1, Bet.Fold);
             expect(round.isFinished).to.be.true;
-            expect(round.getPot()).to.equal(0);
             expect(round.getBalance(0))
                 .to.equal(STARTING_BALANCE - params.anteBet);
             expect(round.getBalance(1))
@@ -150,7 +140,7 @@ describe("Round", () => {
             const players = getPlayers(4);
             const round = Round.create(getShuffledDeck(), players, params);
             round.makeBet(3, Bet.Call);
-            expect(round.getPots()).to.deep.equal([{
+            expect(round.pots).to.deep.equal([{
                 maxCumulativeBet: STARTING_BALANCE,
                 maxMarginalBet: STARTING_BALANCE,
                 marginalBet: params.anteBet + params.bigBlindBet,
@@ -161,7 +151,7 @@ describe("Round", () => {
                 ],
             }]);
             round.makeBet(0, Bet.Call);
-            expect(round.getPots()).to.deep.equal([{
+            expect(round.pots).to.deep.equal([{
                 maxCumulativeBet: STARTING_BALANCE,
                 maxMarginalBet: STARTING_BALANCE,
                 marginalBet: params.anteBet + params.bigBlindBet,
@@ -172,9 +162,10 @@ describe("Round", () => {
                     params.anteBet + params.bigBlindBet
                 ],
             }]);
-            expect(round.getCommunityCards().length).to.equal(0);
+            expect(round.communityCards.filter(cc => cc !== null).length)
+                .to.equal(0);
             round.makeBet(1, Bet.Call);
-            expect(round.getPots()).to.deep.equal([{
+            expect(round.pots).to.deep.equal([{
                 maxCumulativeBet: STARTING_BALANCE,
                 maxMarginalBet: STARTING_BALANCE,
                 marginalBet: params.anteBet + params.bigBlindBet,
@@ -185,7 +176,8 @@ describe("Round", () => {
                     params.anteBet + params.bigBlindBet
                 ],
             }]);
-            expect(round.getCommunityCards().length).to.equal(3);
+            expect(round.communityCards.filter(cc => cc !== null).length)
+                .to.equal(3);
             round.makeBet(2, Bet.Call);
             round.makeBet(3, Bet.Fold);
             round.makeBet(0, Bet.Fold);
@@ -215,9 +207,11 @@ describe("Round", () => {
             round.makeBet(2, Bet.Call);
             round.makeBet(3, Bet.Call);
             round.makeBet(0, Bet.Call);
-            expect(round.getCommunityCards().length).to.equal(3);
+            expect(round.communityCards.filter(cc => cc !== null).length)
+                .to.equal(3);
             round.makeBet(1, Bet.Call);
-            expect(round.getCommunityCards().length).to.equal(4);
+            expect(round.communityCards.filter(cc => cc !== null).length)
+                .to.equal(4);
             round.makeBet(2, Bet.Call);
             round.makeBet(3, Bet.Fold);
             round.makeBet(0, Bet.Fold);
@@ -251,13 +245,15 @@ describe("Round", () => {
             round.makeBet(2, Bet.Call);
             round.makeBet(3, Bet.Call);
             round.makeBet(0, Bet.Call);
-            expect(round.getCommunityCards().length).to.equal(4);
+            expect(round.communityCards.filter(cc => cc !== null).length)
+                .to.equal(4);
             round.makeBet(1, Bet.Call);
-            expect(round.getCommunityCards().length).to.equal(5);
+            expect(round.communityCards.filter(cc => cc !== null).length)
+                .to.equal(5);
             round.makeBet(2, Bet.Call);
             round.makeBet(3, Bet.Fold);
             round.makeBet(0, Bet.Fold);
-            expect(round.getPots()).to.deep.equal([{
+            expect(round.pots).to.deep.equal([{
                 maxCumulativeBet: STARTING_BALANCE,
                 maxMarginalBet: STARTING_BALANCE,
                 marginalBet: params.anteBet + params.bigBlindBet,
@@ -292,9 +288,7 @@ describe("Round", () => {
             round.makeBet(0, Bet.Fold);
             round.makeBet(1, Bet.Call);
             round.makeBet(2, Bet.Call);
-            expect(round.getPot())
-                .to.equal(4 * params.anteBet + 2 * params.bigBlindBet);
-            expect(round.getPots()).to.deep.equal([{
+            expect(round.pots).to.deep.equal([{
                 maxCumulativeBet: STARTING_BALANCE,
                 maxMarginalBet: STARTING_BALANCE,
                 marginalBet: params.anteBet + params.bigBlindBet,
@@ -329,7 +323,7 @@ describe("Round", () => {
             expect(() => round.makeBet(3, Bet.Raise, STARTING_BALANCE))
                 .to.throw();
             round.makeBet(3, Bet.Raise, raiseBy);
-            expect(round.getPots()).to.deep.equal([{
+            expect(round.pots).to.deep.equal([{
                 maxCumulativeBet: STARTING_BALANCE,
                 maxMarginalBet: STARTING_BALANCE,
                 marginalBet: params.anteBet + params.bigBlindBet + raiseBy,
@@ -352,7 +346,7 @@ describe("Round", () => {
             // p3 raises
             round.makeBet(3, Bet.Raise, raiseBy);
             currentBet += raiseBy;
-            expect(round.getPots()).to.deep.equal([{
+            expect(round.pots).to.deep.equal([{
                 maxCumulativeBet: STARTING_BALANCE,
                 maxMarginalBet: STARTING_BALANCE,
                 marginalBet: params.anteBet + params.bigBlindBet + raiseBy,
@@ -368,7 +362,7 @@ describe("Round", () => {
             round.makeBet(0, Bet.Raise, raiseBy);
             currentBet += raiseBy;
             expect(round.getCurrentBet()).to.equal(currentBet);
-            expect(round.getPots()).to.deep.equal([{
+            expect(round.pots).to.deep.equal([{
                 maxCumulativeBet: STARTING_BALANCE,
                 maxMarginalBet: STARTING_BALANCE,
                 marginalBet: params.anteBet + params.bigBlindBet + 2 * raiseBy,
@@ -382,7 +376,7 @@ describe("Round", () => {
             // p1 raises
             round.makeBet(1, Bet.Raise, raiseBy);
             currentBet += raiseBy;
-            expect(round.getPots()).to.deep.equal([{
+            expect(round.pots).to.deep.equal([{
                 maxCumulativeBet: STARTING_BALANCE,
                 maxMarginalBet: STARTING_BALANCE,
                 marginalBet: params.anteBet + params.bigBlindBet + 3 * raiseBy,
@@ -396,9 +390,10 @@ describe("Round", () => {
             expect(round.getCurrentBet()).to.equal(currentBet);
             round.makeBet(2, Bet.Call);
             round.makeBet(3, Bet.Call);
-            expect(round.getCommunityCards().length).to.equal(0);
+            expect(round.communityCards.filter(cc => cc !== null).length)
+                .to.equal(0);
             round.makeBet(0, Bet.Call);
-            expect(round.getPots()).to.deep.equal([{
+            expect(round.pots).to.deep.equal([{
                 maxCumulativeBet: STARTING_BALANCE,
                 maxMarginalBet: STARTING_BALANCE,
                 marginalBet: params.anteBet + params.bigBlindBet + 3 * raiseBy,
@@ -411,8 +406,8 @@ describe("Round", () => {
             }]);
             players.forEach(p => expect(round.getBalance(p.id))
                                      .to.equal(STARTING_BALANCE - currentBet));
-            expect(round.getCommunityCards().length).to.equal(3);
-            expect(round.getPot()).to.equal(4 * currentBet);
+            expect(round.communityCards.filter(cc => cc !== null).length)
+                .to.equal(3);
         });
 
         it("raising by an amount no one can afford", () => {
@@ -429,7 +424,7 @@ describe("Round", () => {
                 const round = Round.create(getShuffledDeck(), players, params);
                 let currentBet = params.anteBet + params.bigBlindBet;
                 let raiseBy = params.minimumBet;
-                expect(round.getPots()).to.deep.equal([{
+                expect(round.pots).to.deep.equal([{
                     maxCumulativeBet: STARTING_BALANCE,
                     maxMarginalBet: STARTING_BALANCE,
                     marginalBet: currentBet,
@@ -440,7 +435,7 @@ describe("Round", () => {
                 }]);
                 round.makeBet(3, Bet.Raise, raiseBy);
                 currentBet += raiseBy;
-                expect(round.getPots()).to.deep.equal([{
+                expect(round.pots).to.deep.equal([{
                     maxCumulativeBet: STARTING_BALANCE,
                     maxMarginalBet: STARTING_BALANCE,
                     marginalBet: currentBet,
@@ -452,7 +447,7 @@ describe("Round", () => {
                 }]);
                 round.makeBet(0, Bet.Raise, raiseBy);
                 currentBet += raiseBy;
-                expect(round.getPots()).to.deep.equal([{
+                expect(round.pots).to.deep.equal([{
                     maxCumulativeBet: STARTING_BALANCE,
                     maxMarginalBet: STARTING_BALANCE,
                     marginalBet: currentBet,
@@ -465,7 +460,7 @@ describe("Round", () => {
                 }]);
                 round.makeBet(1, Bet.Raise, raiseBy);
                 currentBet += raiseBy;
-                expect(round.getPots()).to.deep.equal([{
+                expect(round.pots).to.deep.equal([{
                     maxCumulativeBet: STARTING_BALANCE,
                     maxMarginalBet: STARTING_BALANCE,
                     marginalBet: currentBet,
@@ -479,7 +474,7 @@ describe("Round", () => {
                 round.makeBet(2, Bet.Call);
                 round.makeBet(3, Bet.Call);
                 round.makeBet(0, Bet.Call);
-                expect(round.getPots()).to.deep.equal([{
+                expect(round.pots).to.deep.equal([{
                     maxCumulativeBet: STARTING_BALANCE,
                     maxMarginalBet: STARTING_BALANCE,
                     marginalBet: currentBet,
@@ -498,7 +493,7 @@ describe("Round", () => {
                 players[1].balance = 2 * STARTING_BALANCE;
                 players[2].balance = STARTING_BALANCE;
                 const round = Round.create(getShuffledDeck(), players, params);
-                expect(round.getPots()).to.deep.equal([{
+                expect(round.pots).to.deep.equal([{
                     maxCumulativeBet: STARTING_BALANCE,
                     maxMarginalBet: STARTING_BALANCE,
                     marginalBet: params.anteBet + params.bigBlindBet,
@@ -508,7 +503,7 @@ describe("Round", () => {
                     ],
                 }]);
                 round.makeBet(0, Bet.Raise, STARTING_BALANCE);
-                expect(round.getPots()).to.deep.equal([
+                expect(round.pots).to.deep.equal([
                     {
                         maxCumulativeBet: STARTING_BALANCE,
                         maxMarginalBet: STARTING_BALANCE,
@@ -528,7 +523,7 @@ describe("Round", () => {
                     }
                 ]);
                 round.makeBet(1, Bet.Call);
-                expect(round.getPots()).to.deep.equal([
+                expect(round.pots).to.deep.equal([
                     {
                         maxCumulativeBet: STARTING_BALANCE,
                         maxMarginalBet: STARTING_BALANCE,
@@ -549,10 +544,6 @@ describe("Round", () => {
                     }
                 ]);
                 round.makeBet(2, Bet.Call);
-                expect(round.getPot())
-                    .to.equal(STARTING_BALANCE +
-                              2 * (params.anteBet + params.bigBlindBet +
-                                   STARTING_BALANCE));
                 expect(round.getBalance(0))
                     .to.equal(2 * STARTING_BALANCE - params.anteBet -
                               params.bigBlindBet - STARTING_BALANCE);
@@ -575,7 +566,7 @@ describe("Round", () => {
                 round.makeBet(0, Bet.Call);
                 round.makeBet(1, Bet.Call);
                 round.makeBet(2, Bet.Call);
-                expect(round.getPots()).to.deep.equal([
+                expect(round.pots).to.deep.equal([
                     {
                         maxCumulativeBet: 10,
                         maxMarginalBet: 10,
@@ -615,7 +606,7 @@ describe("Round", () => {
                 expect(round.getBalance(2)).to.equal(0);
                 expect(round.getBalance(3)).to.equal(10);
                 round.makeBet(3, Bet.Fold);
-                expect(round.getPots()).to.deep.equal([
+                expect(round.pots).to.deep.equal([
                     {
                         maxCumulativeBet: 10,
                         maxMarginalBet: 10,
@@ -654,7 +645,7 @@ describe("Round", () => {
                 round.makeBet(0, Bet.Raise, STARTING_BALANCE);
                 round.makeBet(1, Bet.Call);
                 round.makeBet(2, Bet.Call);
-                expect(round.getPots()).to.deep.equal([
+                expect(round.pots).to.deep.equal([
                     {
                         maxCumulativeBet: STARTING_BALANCE,
                         maxMarginalBet: STARTING_BALANCE,
@@ -677,7 +668,7 @@ describe("Round", () => {
                 ]);
                 round.makeBet(0, Bet.Call);
                 round.makeBet(1, Bet.Fold);
-                expect(round.getPots()).to.deep.equal([{
+                expect(round.pots).to.deep.equal([{
                     maxCumulativeBet: STARTING_BALANCE,
                     maxMarginalBet: STARTING_BALANCE,
                     marginalBet: STARTING_BALANCE,
@@ -709,7 +700,7 @@ describe("Round", () => {
                 round.makeBet(0, Bet.Raise, STARTING_BALANCE);
                 round.makeBet(1, Bet.Call);
                 round.makeBet(2, Bet.Call);
-                expect(round.getPots()).to.deep.equal([
+                expect(round.pots).to.deep.equal([
                     {
                         maxCumulativeBet: STARTING_BALANCE,
                         maxMarginalBet: STARTING_BALANCE,
@@ -738,7 +729,7 @@ describe("Round", () => {
                               params.anteBet - params.bigBlindBet);
                 expect(round.getBalance(2)).to.equal(0);
                 round.makeBet(0, Bet.Fold);
-                expect(round.getPots()).to.deep.equal([{
+                expect(round.pots).to.deep.equal([{
                     maxCumulativeBet: STARTING_BALANCE,
                     maxMarginalBet: STARTING_BALANCE,
                     marginalBet: STARTING_BALANCE,

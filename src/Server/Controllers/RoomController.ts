@@ -43,9 +43,9 @@ export const getRoom = async (req: Request, res: Response) => {
         const room = await find(user.id, roomId, secret);
         res.render("room", {
             user: {id: user.id, name: user.name},
-            roomId,
+            roomView: room.viewFor(user.id),
             secret,
-            capacity: room.getParams().capacity,
+            capacity: room.params.capacity,
         });
     } catch (e) {
         console.log(e);

@@ -47,10 +47,10 @@ export async function summarizeAllWithoutSecret(): Promise<RoomSummary[]> {
 
 export async function save(roomId: number, room: RoomObject,
                            secret: string|null): Promise<void> {
-    const capacity = room.getParams().capacity;
-    const numSitting = room.getSitting().filter(p => p !== null).length;
-    const numStanding = room.getStanding().filter(p => p !== null).length;
-    const minimumBet = room.getParams().minimumBet;
+    const capacity = room.params.capacity;
+    const numSitting = room.sitting.filter(p => p !== null).length;
+    const numStanding = room.standing.filter(p => p !== null).length;
+    const minimumBet = room.params.minimumBet;
     const json = JSON.stringify(room.serialize());
     const db = await connect();
     await db.run(UPDATE, secret, capacity, numSitting, numStanding, minimumBet,
@@ -59,15 +59,14 @@ export async function save(roomId: number, room: RoomObject,
 
 export async function create(room: RoomObject,
                              secret: string|null): Promise<number> {
-    const capacity = room.getParams().capacity;
-    const numSitting = room.getSitting().filter(p => p !== null).length;
-    const numStanding = room.getStanding().filter(p => p !== null).length;
-    const minimumBet = room.getParams().minimumBet;
+    const capacity = room.params.capacity;
+    const numSitting = room.sitting.filter(p => p !== null).length;
+    const numStanding = room.standing.filter(p => p !== null).length;
+    const minimumBet = room.params.minimumBet;
     const json = JSON.stringify(room.serialize());
     const db = await connect();
     const {lastID, changes} = await db.run(INSERT, secret, capacity, numSitting,
                                            numStanding, minimumBet, json);
     return lastID;
 }
-
 }

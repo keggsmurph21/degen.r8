@@ -25,11 +25,11 @@ describe("Room", () => {
         expect(() => Room.create({...params, capacity: CAPACITY.MAX + 1}))
             .to.throw();
         const room = Room.create(params);
-        expect(room.getSitting()).to.deep.equal([null, null, null, null]);
-        expect(room.getStanding()).to.deep.equal([]);
-        expect(room.getRound()).to.be.null;
-        expect(room.getParticipants()).to.be.null;
-        expect(room.getDealerIndex()).to.equal(0);
+        expect(room.sitting).to.deep.equal([null, null, null, null]);
+        expect(room.standing).to.deep.equal([]);
+        expect(room.round).to.be.null;
+        expect(room.participants).to.be.null;
+        expect(room.dealerIndex).to.equal(0);
     });
 
     it("enter", () => {
@@ -37,9 +37,9 @@ describe("Room", () => {
         const players = getPlayers(2);
         room.enter(0);
         room.enter(1);
-        expect(room.getSitting()).to.deep.equal([null, null, null, null]);
-        expect(room.getStanding()).to.deep.equal(players);
-        expect(room.getRound()).to.be.null;
+        expect(room.sitting).to.deep.equal([null, null, null, null]);
+        expect(room.standing).to.deep.equal(players);
+        expect(room.round).to.be.null;
         expect(() => room.enter(0)).to.throw();
         expect(() => room.enter(1)).to.throw();
     });
@@ -49,19 +49,19 @@ describe("Room", () => {
         const players = getPlayers(1);
         expect(() => room.leave(0)).to.throw()
         room.enter(0);
-        expect(room.getSitting()).to.deep.equal([null, null, null, null]);
-        expect(room.getStanding()).to.deep.equal([0]);
-        expect(room.getRound()).to.be.null;
+        expect(room.sitting).to.deep.equal([null, null, null, null]);
+        expect(room.standing).to.deep.equal([0]);
+        expect(room.round).to.be.null;
         room.leave(0);
-        expect(room.getSitting()).to.deep.equal([null, null, null, null]);
-        expect(room.getStanding()).to.deep.equal([]);
-        expect(room.getRound()).to.be.null;
+        expect(room.sitting).to.deep.equal([null, null, null, null]);
+        expect(room.standing).to.deep.equal([]);
+        expect(room.round).to.be.null;
         room.enter(0);
         room.sit(0, 0);
         room.leave(0);
-        expect(room.getSitting()).to.deep.equal([null, null, null, null]);
-        expect(room.getStanding()).to.deep.equal([]);
-        expect(room.getRound()).to.be.null;
+        expect(room.sitting).to.deep.equal([null, null, null, null]);
+        expect(room.standing).to.deep.equal([]);
+        expect(room.round).to.be.null;
     });
 
     it("sit", () => {
@@ -73,16 +73,16 @@ describe("Room", () => {
         expect(() => room.sit(0, 0.5)).to.throw();
         expect(() => room.sit(0, params.capacity + 1)).to.throw();
         room.sit(0, 0);
-        expect(room.getSitting()).to.deep.equal([0, null, null, null]);
-        expect(room.getStanding()).to.deep.equal([]);
-        expect(room.getRound()).to.be.null;
+        expect(room.sitting).to.deep.equal([0, null, null, null]);
+        expect(room.standing).to.deep.equal([]);
+        expect(room.round).to.be.null;
         expect(() => room.sit(0, 1)).to.throw();
         room.enter(1);
         expect(() => room.sit(1, 0)).to.throw();
         room.sit(1, 1);
-        expect(room.getSitting()).to.deep.equal([0, 1, null, null]);
-        expect(room.getStanding()).to.deep.equal([]);
-        expect(room.getRound()).to.be.null;
+        expect(room.sitting).to.deep.equal([0, 1, null, null]);
+        expect(room.standing).to.deep.equal([]);
+        expect(room.round).to.be.null;
     });
 
     it("stand", () => {
@@ -93,15 +93,15 @@ describe("Room", () => {
         expect(() => room.stand(0)).to.throw();
         room.sit(0, 0);
         room.stand(0);
-        expect(room.getSitting()).to.deep.equal([null, null, null, null]);
-        expect(room.getStanding()).to.deep.equal([0]);
+        expect(room.sitting).to.deep.equal([null, null, null, null]);
+        expect(room.standing).to.deep.equal([0]);
         room.sit(0, 2);
-        expect(room.getSitting()).to.deep.equal([null, null, 0, null]);
-        expect(room.getStanding()).to.deep.equal([]);
+        expect(room.sitting).to.deep.equal([null, null, 0, null]);
+        expect(room.standing).to.deep.equal([]);
         // leaving directly from sitting
         room.leave(0);
-        expect(room.getSitting()).to.deep.equal([null, null, null, null]);
-        expect(room.getStanding()).to.deep.equal([]);
+        expect(room.sitting).to.deep.equal([null, null, null, null]);
+        expect(room.standing).to.deep.equal([]);
     });
 
     it("addBalance", () => {
@@ -140,9 +140,9 @@ describe("Room", () => {
         room.addBalance(1, STARTING_BALANCE);
         expect(() => room.startRound()).to.not.throw();
         expect(() => room.startRound()).to.throw();
-        expect(room.getRound().getBalance(0))
+        expect(room.round.getBalance(0))
             .to.equal(STARTING_BALANCE - params.anteBet - params.smallBlindBet);
-        expect(room.getRound().getBalance(1))
+        expect(room.round.getBalance(1))
             .to.equal(STARTING_BALANCE - params.anteBet - params.bigBlindBet);
     });
 
@@ -157,7 +157,7 @@ describe("Room", () => {
         room.addBalance(1, STARTING_BALANCE);
         room.startRound();
         room.makeBet(0, Bet.Call);
-        expect(room.getRound().getBalance(0))
+        expect(room.round.getBalance(0))
             .to.equal(STARTING_BALANCE - params.anteBet - params.bigBlindBet);
         expect(room.getBalance(0))
             .to.equal(STARTING_BALANCE - params.anteBet - params.bigBlindBet);
@@ -198,9 +198,9 @@ describe("Room", () => {
             .to.equal(STARTING_BALANCE + params.anteBet + params.bigBlindBet);
         expect(room.getBalance(1))
             .to.equal(STARTING_BALANCE - params.anteBet - params.bigBlindBet);
-        expect(room.getRound()).to.be.null;
-        expect(room.getParticipants()).to.be.null;
-        expect(room.getDealerIndex()).to.equal(1);
+        expect(room.round).to.be.null;
+        expect(room.participants).to.be.null;
+        expect(room.dealerIndex).to.equal(1);
     });
 
     it("(de)serialize", () => {
@@ -235,10 +235,15 @@ describe("Room", () => {
         expect(room.viewFor(0)).to.deep.equal(null);
         room.enter(0);
         expect(room.viewFor(0)).to.deep.equal({
+            playerId: 0,
+            canStartRound: false,
             params,
             sitting: [null, null, null, null],
             standing: [0],
             participants: null,
+            isSitting: false,
+            isStanding: true,
+            isPlaying: false,
             balances: {0: 0},
             round: null,
         });
@@ -246,18 +251,28 @@ describe("Room", () => {
         room.enter(1);
         room.sit(0, 0);
         expect(room.viewFor(0)).to.deep.equal({
+            playerId: 0,
+            canStartRound: false,
             params,
             sitting: [0, null, null, null],
             standing: [1],
             participants: null,
+            isSitting: true,
+            isStanding: false,
+            isPlaying: false,
             balances: {0: 0, 1: 0},
             round: null,
         });
         expect(room.viewFor(1)).to.deep.equal({
+            playerId: 1,
+            canStartRound: false,
             params,
             sitting: [0, null, null, null],
             standing: [1],
             participants: null,
+            isSitting: false,
+            isStanding: true,
+            isPlaying: false,
             balances: {0: 0, 1: 0},
             round: null,
         });
@@ -265,40 +280,64 @@ describe("Room", () => {
         room.sit(1, 1);
         room.addBalance(0, STARTING_BALANCE);
         room.addBalance(1, STARTING_BALANCE);
+        expect(room.viewFor(0)).to.deep.equal({
+            playerId: 0,
+            canStartRound: true,
+            params,
+            sitting: [0, 1, null, null],
+            standing: [],
+            participants: null,
+            isSitting: true,
+            isStanding: false,
+            isPlaying: false,
+            balances: {
+                0: STARTING_BALANCE,
+                1: STARTING_BALANCE,
+            },
+            round: null,
+        });
         room.startRound();
         expect(room.viewFor(0)).to.deep.equal({
+            playerId: 0,
+            canStartRound: false,
             params,
             sitting: [0, 1, null, null],
             standing: [],
             participants: [0, 1],
+            isSitting: true,
+            isStanding: false,
+            isPlaying: true,
             balances: {
                 0: STARTING_BALANCE - params.anteBet - params.smallBlindBet,
                 1: STARTING_BALANCE - params.anteBet - params.bigBlindBet
             },
             round: {
-                myPlayerState: {
-                    index: 0,
-                    playerId: 0,
-                    balance: STARTING_BALANCE - params.anteBet -
-                                 params.smallBlindBet,
-                    hasFolded: false,
-                    holeCards: [
-                        {suit: Suit.Hearts, rank: Rank.Queen},
-                        {suit: Suit.Spades, rank: Rank.Ten},
-                    ],
-                    maxStakes: STARTING_BALANCE
-                },
-                otherPlayerStates: [{
-                    index: 1,
-                    playerId: 1,
-                    balance:
-                        STARTING_BALANCE - params.anteBet - params.bigBlindBet,
-                    hasFolded: false,
-                    maxStakes: STARTING_BALANCE,
-                }],
+                playerStates: [
+                    {
+                        index: 0,
+                        playerId: 0,
+                        balance: STARTING_BALANCE - params.anteBet -
+                                     params.smallBlindBet,
+                        hasFolded: false,
+                        holeCards: [
+                            {suit: Suit.Hearts, rank: Rank.Queen},
+                            {suit: Suit.Spades, rank: Rank.Ten},
+                        ],
+                        maxStakes: STARTING_BALANCE
+                    },
+                    {
+                        index: 1,
+                        playerId: 1,
+                        balance: STARTING_BALANCE - params.anteBet -
+                                     params.bigBlindBet,
+                        hasFolded: false,
+                        holeCards: null,
+                        maxStakes: STARTING_BALANCE,
+                    }
+                ],
                 minimumBet: params.minimumBet,
                 currentIndex: 0,
-                communityCards: [],
+                communityCards: [null, null, null, null, null],
                 pots: [{
                     maxCumulativeBet: STARTING_BALANCE,
                     maxMarginalBet: STARTING_BALANCE,
@@ -315,38 +354,46 @@ describe("Room", () => {
         expect(Room.deserialize(JSON.parse(JSON.stringify(room.serialize())))
                    .viewFor(1))
             .to.deep.equal({
+                playerId: 1,
+                canStartRound: false,
                 params,
                 sitting: [0, 1, null, null],
                 standing: [],
                 participants: [0, 1],
+                isSitting: true,
+                isStanding: false,
+                isPlaying: true,
                 balances: {
                     0: STARTING_BALANCE - params.anteBet - params.smallBlindBet,
                     1: STARTING_BALANCE - params.anteBet - params.bigBlindBet
                 },
                 round: {
-                    myPlayerState: {
-                        index: 1,
-                        playerId: 1,
-                        balance: STARTING_BALANCE - params.anteBet -
-                                     params.bigBlindBet,
-                        hasFolded: false,
-                        holeCards: [
-                            {suit: Suit.Spades, rank: Rank.Nine},
-                            {suit: Suit.Diamonds, rank: Rank.Eight},
-                        ],
-                        maxStakes: STARTING_BALANCE
-                    },
-                    otherPlayerStates: [{
-                        index: 0,
-                        playerId: 0,
-                        balance: STARTING_BALANCE - params.anteBet -
-                                     params.smallBlindBet,
-                        hasFolded: false,
-                        maxStakes: STARTING_BALANCE,
-                    }],
+                    playerStates: [
+                        {
+                            index: 0,
+                            playerId: 0,
+                            balance: STARTING_BALANCE - params.anteBet -
+                                         params.smallBlindBet,
+                            hasFolded: false,
+                            holeCards: null,
+                            maxStakes: STARTING_BALANCE,
+                        },
+                        {
+                            index: 1,
+                            playerId: 1,
+                            balance: STARTING_BALANCE - params.anteBet -
+                                         params.bigBlindBet,
+                            hasFolded: false,
+                            holeCards: [
+                                {suit: Suit.Spades, rank: Rank.Nine},
+                                {suit: Suit.Diamonds, rank: Rank.Eight},
+                            ],
+                            maxStakes: STARTING_BALANCE
+                        }
+                    ],
                     minimumBet: params.minimumBet,
                     currentIndex: 0,
-                    communityCards: [],
+                    communityCards: [null, null, null, null, null],
                     pots: [{
                         maxCumulativeBet: STARTING_BALANCE,
                         maxMarginalBet: STARTING_BALANCE,
@@ -363,24 +410,29 @@ describe("Room", () => {
         expect(room.viewFor(2)).to.deep.equal(null);
         room.enter(2);
         expect(room.viewFor(2)).to.deep.equal({
+            playerId: 2,
+            canStartRound: false,
             params,
             sitting: [0, 1, null, null],
             standing: [2],
             participants: [0, 1],
+            isSitting: false,
+            isStanding: true,
+            isPlaying: false,
             balances: {
                 0: STARTING_BALANCE - params.anteBet - params.smallBlindBet,
                 1: STARTING_BALANCE - params.anteBet - params.bigBlindBet,
                 2: 0,
             },
             round: {
-                myPlayerState: null,
-                otherPlayerStates: [
+                playerStates: [
                     {
                         index: 0,
                         playerId: 0,
                         balance: STARTING_BALANCE - params.anteBet -
                                      params.smallBlindBet,
                         hasFolded: false,
+                        holeCards: null,
                         maxStakes: STARTING_BALANCE,
                     },
                     {
@@ -389,12 +441,13 @@ describe("Room", () => {
                         balance: STARTING_BALANCE - params.anteBet -
                                      params.bigBlindBet,
                         hasFolded: false,
+                        holeCards: null,
                         maxStakes: STARTING_BALANCE
                     }
                 ],
                 minimumBet: params.minimumBet,
                 currentIndex: 0,
-                communityCards: [],
+                communityCards: [null, null, null, null, null],
                 pots: [{
                     maxCumulativeBet: STARTING_BALANCE,
                     maxMarginalBet: STARTING_BALANCE,

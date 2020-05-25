@@ -22,11 +22,16 @@ export interface RoomSummary {
     minimumBet: number;
 }
 
-interface RoomView {
+export interface RoomView {
+    playerId: number;
+    canStartRound: boolean;
     params: RoomParameters;
     sitting: number[];
     standing: number[];
     participants: number[];
+    isSitting: boolean;
+    isStanding: boolean;
+    isPlaying: boolean;
     balances: {[playerId: number]: number};
     round: RoundView|null;
 }
@@ -58,17 +63,24 @@ export interface SerialRoom extends RoomParameters {
 
 type DeckSupplier = () => Card[];
 
+export function getEligiblePlayerIds(
+    playerIds: number[], balanceLookup: {[playerId: number]: number},
+    permuteBy: number = 0): number[] {
+    return permute(playerIds, permuteBy)
+        .filter(playerId => playerId !== null && balanceLookup[playerId] > 0);
+}
+
 export class Room {
 
-    private balances: {[playerId: number]: number} = {};
-    private sitting: number[] = [];
-    private standing: number[] = [];
-    private participants: number[]|null = null;
-    private round: Round|null = null;
-    private dealerIndex: number = 0;
+    public balances: {[playerId: number]: number} = {};
+    public sitting: number[] = [];
+    public standing: number[] = [];
+    public participants: number[]|null = null;
+    public round: Round|null = null;
+    public dealerIndex: number = 0;
 
     private getDeck: DeckSupplier;
-    private params: RoomParameters;
+    public params: RoomParameters;
 
     private constructor() {}
     public static create(params: RoomParameters,
@@ -133,7 +145,7 @@ export class Room {
                this.isStanding(playerId);
     }
     public isPlaying(playerId: number): boolean {
-        return playerId !== null && this.participants &&
+        return playerId !== null && this.participants !== null &&
                this.participants.indexOf(playerId) !== -1;
     }
     public isSitting(playerId: number): boolean {
@@ -186,20 +198,18 @@ export class Room {
             throw new Error(`This player is not in the Room!`);
         }
     }
+    public canStartRound(): boolean {
+        const eligiblePlayerIds =
+            getEligiblePlayerIds(this.sitting, this.balances, this.dealerIndex);
+        return (this.round === null || this.round.isFinished) &&
+               eligiblePlayerIds.length >= 2;
+    }
     public startRound(): Round {
-        if (this.round !== null && !this.round.isFinished)
-            throw new Error(`There is already an ongoing round!`);
-        const eligiblePlayers =
-            permute(this.sitting, this.dealerIndex)
-                .filter(playerId =>
-                            playerId !== null && this.balances[playerId] > 0);
-        if (eligiblePlayers.length === 0)
-            throw new Error(
-                `There are no eligible players to start a Round with!`);
-        if (eligiblePlayers.length === 1)
-            throw new Error(
-                `You cannot start a Round with only 1 eligible player!`);
-        const playersAndBalances = eligiblePlayers.map(playerId => {
+        if (!this.canStartRound())
+            throw new Error(`You cannot start a round right now!`);
+        const eligiblePlayerIds =
+            getEligiblePlayerIds(this.sitting, this.balances, this.dealerIndex);
+        const playersAndBalances = eligiblePlayerIds.map(playerId => {
             return {
                 id: playerId,
                 balance: this.getBalance(playerId),
@@ -207,7 +217,7 @@ export class Room {
         });
         this.round =
             Round.create(this.getDeck(), playersAndBalances, this.params);
-        this.participants = eligiblePlayers;
+        this.participants = eligiblePlayerIds;
         this.participants.forEach(playerId => {
             this.balances[playerId] = this.round.getBalance(playerId);
         });
@@ -244,14 +254,6 @@ export class Room {
             this.round.addBalance(playerId, credit);
     }
     public updateParams(params: RoomParameters) { this.params = params; }
-    public getSitting(): ReadonlyArray<number> { return this.sitting; }
-    public getStanding(): ReadonlyArray<number> { return this.standing; }
-    public getParticipants(): ReadonlyArray<number> {
-        return this.participants;
-    }
-    public getDealerIndex(): number { return this.dealerIndex; }
-    public getRound(): Readonly<Round>|null { return this.round; }
-    public getParams(): Readonly<RoomParameters> { return this.params; }
     public getBalance(playerId: number): number|null {
         return this.balances[playerId];
     }
@@ -261,31 +263,36 @@ export class Room {
         let round = null;
         if (this.round !== null) {
             round = {
-                myPlayerState: null,
-                otherPlayerStates: [],
                 minimumBet: this.round.minimumBet,
-                communityCards: this.round.getCommunityCards(),
-                pots: this.round.getPots(),
-                currentIndex: this.round.getCurrentIndex(),
-                didLastRaiseIndex: this.round.getDidLastRaiseIndex(),
+                communityCards: this.round.communityCards,
+                pots: this.round.pots,
+                currentIndex: this.round.currentIndex,
+                didLastRaiseIndex: this.round.didLastRaiseIndex,
                 isFinished: this.round.isFinished,
+                playerStates: this.round.playerStates.map(ps => {
+                    // pass on everything except the hole cards
+                    let playerState = {...ps};
+                    if (ps.playerId !== playerId) {
+                        playerState.holeCards = null;
+                    }
+                    return playerState;
+                }),
             };
-            this.round.getPlayerStates().forEach(ps => {
-                if (ps.playerId === playerId) {
-                    round.myPlayerState = ps;
-                    return;
-                }
-                const {holeCards, ...otherPlayerState} = ps;
-                round.otherPlayerStates.push(otherPlayerState);
-            });
         }
-        return {
+        const v: RoomView = {
+            playerId,
+            canStartRound: this.canStartRound(),
             params: this.params,
             sitting: this.sitting,
             standing: this.standing,
             participants: this.participants,
+            isSitting: this.isSitting(playerId),
+            isStanding: this.isStanding(playerId),
+            isPlaying: this.isPlaying(playerId),
             balances: this.balances,
             round,
         };
+        console.log(JSON.stringify(v, null, 4));
+        return v;
     }
 };

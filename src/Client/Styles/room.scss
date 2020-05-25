@@ -1,1 +1,98 @@
 @import "main"
+
+/* FIXME: This is for debugging */;
+#controls {
+    position: absolute;
+    top: 3em;
+    left: 3em;
+}
+
+#table-container {
+    height: calc(100vh - 2.4em); /* FIXME: Height of #banner */
+    width: 100vw;
+}
+
+#table {
+    stroke: black;
+    stroke-width: 10;
+    fill: #119911;
+}
+
+.card {
+    rect {
+        stroke: black;
+        stroke-width: 3;
+    }
+
+    &-down {
+        rect {
+            fill: darken($pale-purple, 40%);
+            opacity: 69%;
+        }
+    }
+
+    &-up {
+        rect {
+            fill: #dedbef;
+        }
+
+        text {
+            font-size: 2.4em;
+            text-anchor: middle;
+        }
+
+        .diamonds, .hearts {
+            fill: red;
+        }
+    }
+}
+
+.caption {
+    font-size: 1.7em;
+    font-weight: bold;
+    text-anchor: middle;
+    fill: #dedbef;
+    stroke: black;
+
+    &-empty {
+        font-size: 2.7em;
+    }
+}
+
+.balance {
+    font-size: 0.8em;
+}
+
+.button {
+    text-anchor: middle;
+    font-weight: bold;
+
+    rect {
+        fill: $pale-purple;
+        stroke: black;
+        stroke-width: 3;
+    }
+
+    &:hover {
+        cursor: pointer;
+    }
+}
+
+foreignObject {
+    overflow: visible;
+
+    label {
+        display: none;
+    }
+
+    & > div {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+}
+
+.slider-view {
+    width: 6ch;
+    text-align: right;
+}

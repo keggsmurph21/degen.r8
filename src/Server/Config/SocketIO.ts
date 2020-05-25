@@ -11,6 +11,7 @@ import {
     UpdateRoom,
 } from "Interface/Lobby";
 import {
+    AddBalanceRequest,
     CallRequest,
     FoldRequest,
     LeaveRequest,
@@ -23,6 +24,7 @@ import {
 import socketio from "socket.io";
 
 import {
+    addBalance,
     create,
     enter,
     leave,
@@ -133,6 +135,23 @@ async function onStart(io: socketio.Server, socket: socketio.Socket,
     console.log("onStart", data);
 }
 
+async function onAddBalance(io: socketio.Server, socket: socketio.Socket,
+                            data: AddBalanceRequest): Promise<void> {
+    console.log("onAddBalance", data);
+    let res: RoomResponse;
+    try {
+        const userId = socket.request.session.passport.user;
+        const roomId = socket.request.session.roomId;
+        const secret = socket.request.session.secret;
+        const credit = data.credit;
+        const room = await addBalance(userId, roomId, secret, credit);
+        res = {error: null, view: room.viewFor(userId)};
+    } catch (e) {
+        res = {error: e.message, view: null};
+    }
+    socket.emit("room-changed", res);
+}
+
 async function onFold(io: socketio.Server, socket: socketio.Socket,
                       data: FoldRequest): Promise<void> {
     // FIXME: Implement
@@ -211,6 +230,8 @@ export function configureSocketIO(server: Server): void {
         socket.on("stand", async data => { await onStand(io, socket, data); });
         socket.on("leave", async data => { await onLeave(io, socket, data); });
         socket.on("start", async data => { await onStart(io, socket, data); });
+        socket.on("add-balance",
+                  async data => { await onAddBalance(io, socket, data); });
         socket.on("fold", async data => { await onFold(io, socket, data); });
         socket.on("call", async data => { await onCall(io, socket, data); });
         socket.on("raise", async data => { await onRaise(io, socket, data); });

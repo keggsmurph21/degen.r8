@@ -32,23 +32,23 @@ function toTableData(view: RoomView,
         return {isAvailable: false, canSit: false, seat: {caption, hand}};
     });
     let communityCards = null;
-    let betting = null;
+    let betting = {
+        addBalance: {
+            min: 10 * view.params.bigBlindBet,
+            default: 20.00,
+            max: 100 * view.params.bigBlindBet,
+        },
+        raise: null,
+    };
     let pots = null;
     if (view.round != null) {
         communityCards = view.round.communityCards;
         const maxBet = view.balances[view.playerId];
         if (view.isPlaying) {
-            betting = {
-                addBalance: {
-                    min: 10 * view.params.bigBlindBet,
-                    default: 20.00,
-                    max: 100 * view.params.bigBlindBet,
-                },
-                raise: {
-                    min: view.params.minimumBet,
-                    default: Math.min(5 * view.params.minimumBet, maxBet),
-                    max: maxBet,
-                },
+            betting.raise = {
+                min: view.params.minimumBet,
+                default: Math.min(5 * view.params.minimumBet, maxBet),
+                max: maxBet,
             };
         }
         pots = view.round.pots.map(
@@ -119,12 +119,10 @@ export class TableWidget extends SVGWidget<RoomView> {
                 this.pots.transform({translate: {y: tableRadius * 0.3}});
                 this.container.appendChild(this.pots.container);
             }
-
-            if (data.betting) {
-                this.betting = new BettingWidget(data.betting, this.onClick);
-                this.betting.transform({translate: {y: tableRadius * 1.7}});
-                this.container.append(this.betting.container);
-            }
         }
+
+        this.betting = new BettingWidget(data.betting, this.onClick);
+        this.betting.transform({translate: {y: tableRadius * 1.7}});
+        this.container.append(this.betting.container);
     }
 }

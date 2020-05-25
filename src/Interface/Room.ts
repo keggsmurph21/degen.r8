@@ -10,6 +10,10 @@ export interface LeaveRequest {}
 
 export interface StartRequest {}
 
+export interface AddBalanceRequest {
+    credit: number;
+}
+
 export interface FoldRequest {}
 
 export interface CallRequest {}

@@ -31,29 +31,33 @@ export class BettingWidget extends SVGWidget<BettingData> {
             }
         },
                                                              onClick);
-        this.addBalanceSliderButton.transform(
-            {translate: {x: -tableRadius * 1.4}});
         this.container.appendChild(this.addBalanceSliderButton.container);
 
-        this.foldButton = new ButtonWidget({buttonText: "fold"}, onClick);
-        this.foldButton.transform({translate: {x: -tableRadius * 0.4}});
-        this.container.appendChild(this.foldButton.container);
+        if (data.raise) {
+            this.addBalanceSliderButton.transform(
+                {translate: {x: -tableRadius * 1.4}});
 
-        this.callButton = new ButtonWidget({buttonText: "call"}, onClick);
-        this.callButton.transform({translate: {x: tableRadius * 0.4}});
-        this.container.appendChild(this.callButton.container);
+            this.foldButton = new ButtonWidget({buttonText: "fold"}, onClick);
+            this.foldButton.transform({translate: {x: -tableRadius * 0.4}});
+            this.container.appendChild(this.foldButton.container);
 
-        this.raiseSliderButton = new SliderButtonWidget({
-            buttonText: "raise",
-            input: {
-                ...data.raise,
-                id: "raise-amount",
-                labelText: "raise amount",
-                step: 0.01
+            this.callButton = new ButtonWidget({buttonText: "call"}, onClick);
+            this.callButton.transform({translate: {x: tableRadius * 0.4}});
+            this.container.appendChild(this.callButton.container);
+
+            this.raiseSliderButton = new SliderButtonWidget({
+                buttonText: "raise",
+                input: {
+                    ...data.raise,
+                    id: "raise-amount",
+                    labelText: "raise amount",
+                    step: 0.01
+                },
             },
-        },
-                                                        onClick);
-        this.raiseSliderButton.transform({translate: {x: tableRadius * 1.4}});
-        this.container.appendChild(this.raiseSliderButton.container);
+                                                            onClick);
+            this.raiseSliderButton.transform(
+                {translate: {x: tableRadius * 1.4}});
+            this.container.appendChild(this.raiseSliderButton.container);
+        }
     }
 }

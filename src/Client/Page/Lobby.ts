@@ -18,7 +18,7 @@ interface LobbyWindow extends Window {
 declare var window: LobbyWindow;
 
 window.main = (params: Param[]) => {
-    const socket = connect(null);
+    const socket = connect();
 
     const newRoomParamsForm = new NewRoomParamsForm(params, requestedParams => {
         socket.emit("create-room", {params: requestedParams});

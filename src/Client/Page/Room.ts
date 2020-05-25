@@ -24,7 +24,7 @@ function getRandomUsername(_: any) {
 }
 
 window.main = (view: RoomView) => {
-    const socket = connect(null);
+    const socket = connect();
 
     const container = document.getElementById("table-container");
     const svg = createSVGElement("svg", {
@@ -53,6 +53,9 @@ window.main = (view: RoomView) => {
             case "start":
                 socket.emit("start", {});
                 break;
+            case "add balance":
+                socket.emit("add-balance", {credit: argument});
+                break;
             case "fold":
                 socket.emit("fold", {});
                 break;
@@ -66,7 +69,6 @@ window.main = (view: RoomView) => {
                 alert("not implemented: " + name);
             }
         });
-    // FIXME: Only transform if we have a betting interface
     table.transform({translate: {y: -tableRadius * 0.2}});
     svg.appendChild(table.container);
 

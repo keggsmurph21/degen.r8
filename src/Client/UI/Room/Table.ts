@@ -1,4 +1,6 @@
-import {createSVGElement, SVGWidget} from "../SVG";
+import {RoomView} from "Poker/Room";
+
+import {createSVGElement, removeChildren, SVGWidget} from "../SVG";
 
 import {BettingData, BettingWidget} from "./Betting";
 import {ButtonWidget} from "./Button";
@@ -7,6 +9,63 @@ import {tableRadius} from "./Constants";
 import {PotsData, PotsWidget} from "./Pots";
 import {SeatsData, SeatsWidget} from "./Seats";
 
+function toTableData(view: RoomView,
+                     usernameLookup: (id: number) => string): TableData {
+    const seats = view.sitting.map(playerId => {
+        if (playerId == null) {
+            return {isAvailable: true, canSit: !view.isSitting, seat: null};
+        }
+        const caption = {
+            username: usernameLookup(playerId),
+            balance: view.balances[playerId],
+        };
+        let hand = null;
+        if (view.round != null) {
+            view.round.playerStates.forEach(ps => {
+                if (hand !== null)
+                    return;
+                if (ps.playerId !== playerId)
+                    return;
+                hand = ps.holeCards;
+            });
+        }
+        return {isAvailable: false, canSit: false, seat: {caption, hand}};
+    });
+    let communityCards = null;
+    let betting = null;
+    let pots = null;
+    if (view.round != null) {
+        communityCards = view.round.communityCards;
+        const maxBet = view.balances[view.playerId];
+        if (view.isPlaying) {
+            betting = {
+                addBalance: {
+                    min: 10 * view.params.bigBlindBet,
+                    default: 20.00,
+                    max: 100 * view.params.bigBlindBet,
+                },
+                raise: {
+                    min: view.params.minimumBet,
+                    default: Math.min(5 * view.params.minimumBet, maxBet),
+                    max: maxBet,
+                },
+            };
+        }
+        pots = view.round.pots.map(
+            pot => { return {contributions: pot.contributions}; });
+    }
+    const tableData = {
+        nPlayers: view.sitting.length,
+        showStartButton: view.canStartRound,
+        communityCards,
+        seats,
+        betting,
+        pots,
+    };
+    console.log("converted", view, "=>", tableData);
+    return tableData;
+}
+
 export type TableData = {
     nPlayers: number; communityCards: CommunityCardsData;
     showStartButton: boolean;
@@ -14,7 +73,7 @@ export type TableData = {
     betting: BettingData;
 }&SeatsData;
 
-export class TableWidget extends SVGWidget<TableData> {
+export class TableWidget extends SVGWidget<RoomView> {
     public container: SVGGElement;
     public background: SVGEllipseElement;
     public communityCards: CommunityCardsWidget = null;
@@ -22,21 +81,29 @@ export class TableWidget extends SVGWidget<TableData> {
     public startButton: ButtonWidget = null;
     public seats: SeatsWidget;
     public betting: BettingWidget = null;
-    constructor(data: TableData,
-                onClick: (name: string, value?: number) => void) {
-        super(data);
+    constructor(view: RoomView, public usernameLookup: (id: number) => string,
+                public onClick: (name: string, value?: number) => void) {
+        super(view);
         this.container = createSVGElement<SVGGElement>("g");
+        this.update(view);
+    }
+
+    public update(view: RoomView): void {
+
+        removeChildren(this.container);
+        const data = toTableData(view, this.usernameLookup);
 
         this.background = createSVGElement<SVGEllipseElement>(
             "ellipse",
             {attrs: {id: "table", rx: 1.3 * tableRadius, ry: tableRadius}});
         this.container.appendChild(this.background);
 
-        this.seats = new SeatsWidget({seats: data.seats}, onClick);
+        this.seats = new SeatsWidget({seats: data.seats}, this.onClick);
         this.container.appendChild(this.seats.container);
 
         if (data.showStartButton) {
-            this.startButton = new ButtonWidget({buttonText: "start"}, onClick);
+            this.startButton =
+                new ButtonWidget({buttonText: "start"}, this.onClick);
             this.container.appendChild(this.startButton.container);
         } else {
             if (data.communityCards) {
@@ -54,7 +121,7 @@ export class TableWidget extends SVGWidget<TableData> {
             }
 
             if (data.betting) {
-                this.betting = new BettingWidget(data.betting, onClick);
+                this.betting = new BettingWidget(data.betting, this.onClick);
                 this.betting.transform({translate: {y: tableRadius * 1.7}});
                 this.container.append(this.betting.container);
             }

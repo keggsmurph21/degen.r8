@@ -33,6 +33,7 @@ export interface RoomView {
     isStanding: boolean;
     isPlaying: boolean;
     balances: {[playerId: number]: number};
+    isCurrentPlayer: boolean;
     round: RoundView|null;
 }
 
@@ -261,6 +262,7 @@ export class Room {
         if (!this.isIn(playerId))
             return null;
         let round = null;
+        let isCurrentPlayer = false;
         if (this.round !== null) {
             round = {
                 minimumBet: this.round.minimumBet,
@@ -269,11 +271,15 @@ export class Room {
                 currentIndex: this.round.currentIndex,
                 didLastRaiseIndex: this.round.didLastRaiseIndex,
                 isFinished: this.round.isFinished,
-                playerStates: this.round.playerStates.map(ps => {
+                playerStates: this.round.playerStates.map((ps, i) => {
                     // pass on everything except the hole cards
                     let playerState = {...ps};
                     if (ps.playerId !== playerId) {
                         playerState.holeCards = null;
+                    }
+                    if (i === this.round.currentIndex &&
+                        ps.playerId === playerId) {
+                        isCurrentPlayer = true;
                     }
                     return playerState;
                 }),
@@ -290,6 +296,7 @@ export class Room {
             isStanding: this.isStanding(playerId),
             isPlaying: this.isPlaying(playerId),
             balances: this.balances,
+            isCurrentPlayer,
             round,
         };
         console.log(JSON.stringify(v, null, 4));

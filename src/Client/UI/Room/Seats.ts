@@ -27,6 +27,7 @@ export type BaseSeatData = {
     canSit: boolean,
     isAvailable: boolean,
     seat: SeatData|null,
+    isCurrentPlayer: boolean,
 }
 
 export type SeatsData = {
@@ -51,6 +52,8 @@ export class SeatsWidget extends SVGWidget<SeatsData> {
                     {index: i, canSit: seatData.canSit}, onClick);
             } else {
                 seatWidget = new SeatWidget(seatData.seat);
+                if (seatData.isCurrentPlayer)
+                    seatWidget.container.classList.add("current-player");
             }
             seatWidget.transform({translate: {x, y}, scale});
             this.container.appendChild(seatWidget.container);

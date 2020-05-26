@@ -237,6 +237,7 @@ describe("Room", () => {
         expect(room.viewFor(0)).to.deep.equal({
             playerId: 0,
             canStartRound: false,
+            isCurrentPlayer: false,
             params,
             sitting: [null, null, null, null],
             standing: [0],
@@ -253,6 +254,7 @@ describe("Room", () => {
         expect(room.viewFor(0)).to.deep.equal({
             playerId: 0,
             canStartRound: false,
+            isCurrentPlayer: false,
             params,
             sitting: [0, null, null, null],
             standing: [1],
@@ -266,6 +268,7 @@ describe("Room", () => {
         expect(room.viewFor(1)).to.deep.equal({
             playerId: 1,
             canStartRound: false,
+            isCurrentPlayer: false,
             params,
             sitting: [0, null, null, null],
             standing: [1],
@@ -283,6 +286,7 @@ describe("Room", () => {
         expect(room.viewFor(0)).to.deep.equal({
             playerId: 0,
             canStartRound: true,
+            isCurrentPlayer: false,
             params,
             sitting: [0, 1, null, null],
             standing: [],
@@ -300,6 +304,7 @@ describe("Room", () => {
         expect(room.viewFor(0)).to.deep.equal({
             playerId: 0,
             canStartRound: false,
+            isCurrentPlayer: true,
             params,
             sitting: [0, 1, null, null],
             standing: [],
@@ -356,6 +361,7 @@ describe("Room", () => {
             .to.deep.equal({
                 playerId: 1,
                 canStartRound: false,
+                isCurrentPlayer: false,
                 params,
                 sitting: [0, 1, null, null],
                 standing: [],
@@ -412,6 +418,7 @@ describe("Room", () => {
         expect(room.viewFor(2)).to.deep.equal({
             playerId: 2,
             canStartRound: false,
+            isCurrentPlayer: false,
             params,
             sitting: [0, 1, null, null],
             standing: [2],

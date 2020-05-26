@@ -13,13 +13,19 @@ function toTableData(view: RoomView,
                      usernameLookup: (id: number) => string): TableData {
     const seats = view.sitting.map(playerId => {
         if (playerId == null) {
-            return {isAvailable: true, canSit: !view.isSitting, seat: null};
+            return {
+                isAvailable: true,
+                canSit: !view.isSitting,
+                seat: null,
+                isCurrentPlayer: false,
+            };
         }
         const caption = {
             username: usernameLookup(playerId),
             balance: view.balances[playerId],
         };
         let hand = null;
+        let isCurrentPlayer = false;
         if (view.round != null) {
             view.round.playerStates.forEach(ps => {
                 if (hand !== null)
@@ -27,9 +33,15 @@ function toTableData(view: RoomView,
                 if (ps.playerId !== playerId)
                     return;
                 hand = ps.holeCards;
+                isCurrentPlayer = view.isCurrentPlayer;
             });
         }
-        return {isAvailable: false, canSit: false, seat: {caption, hand}};
+        return {
+            isAvailable: false,
+            canSit: false,
+            seat: {caption, hand},
+            isCurrentPlayer,
+        };
     });
     let communityCards = null;
     let betting = {
@@ -39,6 +51,7 @@ function toTableData(view: RoomView,
             max: 100 * view.params.bigBlindBet,
         },
         raise: null,
+        isCurrentPlayer: view.isCurrentPlayer,
     };
     let pots = null;
     if (view.round != null) {

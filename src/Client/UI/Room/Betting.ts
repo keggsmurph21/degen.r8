@@ -8,6 +8,7 @@ import {tableRadius} from "./Constants";
 export interface BettingData {
     addBalance: {default: number, min: number, max: number};
     raise: {default: number, min: number, max: number};
+    isCurrentPlayer: boolean;
 }
 
 export class BettingWidget extends SVGWidget<BettingData> {
@@ -33,7 +34,7 @@ export class BettingWidget extends SVGWidget<BettingData> {
                                                              onClick);
         this.container.appendChild(this.addBalanceSliderButton.container);
 
-        if (data.raise) {
+        if (data.isCurrentPlayer && data.raise) {
             this.addBalanceSliderButton.transform(
                 {translate: {x: -tableRadius * 1.4}});
 

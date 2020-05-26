@@ -1,3 +1,4 @@
+import {Card} from "Poker/Card";
 import {RoomView} from "Poker/Room";
 
 import {createSVGElement, removeChildren, SVGWidget} from "../SVG";
@@ -24,7 +25,7 @@ function toTableData(view: RoomView,
             username: usernameLookup(playerId),
             balance: view.balances[playerId],
         };
-        let hand = null;
+        let hand: Card[] = null;
         let isCurrentPlayer = false;
         if (view.round != null) {
             view.round.playerStates.forEach(ps => {
@@ -44,7 +45,7 @@ function toTableData(view: RoomView,
         };
     });
     let communityCards = null;
-    let betting = {
+    let betting: BettingData = {
         addBalance: {
             min: 10 * view.params.bigBlindBet,
             default: 20.00,

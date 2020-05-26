@@ -14,7 +14,7 @@ import {
 const STARTING_BALANCE = ADD_BALANCE.DEFAULT;
 
 describe("Round", () => {
-    const getPlayers = num => {
+    const getPlayers = (num: number) => {
         let players = [];
         for (let i = 0; i < num; ++i)
             players.push(

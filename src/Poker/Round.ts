@@ -83,6 +83,7 @@ export interface RoundView {
     minimumBet: number;
     communityCards: Card[];
     pots: Pot[];
+    currentIndex: number;
     didLastRaiseIndex: number;
     isFinished: boolean;
 }

@@ -3,7 +3,7 @@ import {RoomSummary} from "Poker/Room";
 class RoomRow {
     public readonly tr: HTMLTableRowElement;
     public cells: {[columnName: string]: HTMLTableCellElement} = {};
-    public dataColumnNames: ReadonlyArray<string> = [
+    public dataColumnNames: ReadonlyArray<keyof RoomSummary> = [
         "id",
         "numSitting",
         "capacity",

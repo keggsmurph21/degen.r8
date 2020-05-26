@@ -9,10 +9,14 @@ import {
     StrInputWidget
 } from "../Input";
 
+type X = {
+    [name: string]: InputWidget
+}
+
 export class NewRoomParamsForm {
     public readonly container: HTMLElement;
     public readonly submitButton: HTMLButtonElement;
-    public newRoomParams: {[name: string]: InputWidget} = {};
+    public newRoomParams: X = {};
     constructor(params: Param[],
                 public readonly onSubmit: (entries: Form) => void) {
         this.container = document.getElementById("new-room-params-container");
@@ -84,7 +88,7 @@ export class NewRoomParamsForm {
         this.container.appendChild(this.submitButton);
     }
     public entries(): Form {
-        let entries = {};
+        let entries: Form = {};
         Object.entries(this.newRoomParams).forEach(([name, newRoomParam]) => {
             entries[name] = newRoomParam.value();
         });
@@ -92,4 +96,3 @@ export class NewRoomParamsForm {
         return entries;
     }
 }
-

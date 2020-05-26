@@ -1,6 +1,6 @@
 {
-    "watch": ["src"],
+    "watch": ["src/**/*.ts"],
     "ext": "ts",
     "ignore": ["**/test/*.ts"],
-    "exec": "NODE_PATH=./src ts-node ./src/Server/main.ts"
+    "exec": "NODE_PATH=./src ts-node --files ./src/Server/main.ts"
 }

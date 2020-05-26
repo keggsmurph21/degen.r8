@@ -43,10 +43,9 @@ export async function byId(id: number): Promise<UserModel|null> {
 export async function create(name: string, password: string): Promise<number> {
     const db = await connect();
     const passwordHash = await hashPassword(password);
-    const {lastID, changed} = await db.run(INSERT, name, passwordHash);
+    const {lastID, changes} = await db.run(INSERT, name, passwordHash);
     return lastID;
 }
-
 }
 
 async function hashPassword(password: string): Promise<string> {

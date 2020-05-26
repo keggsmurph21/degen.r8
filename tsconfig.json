@@ -9,6 +9,7 @@
         "experimentalDecorators": true,
         "lib": ["ESNext", "ES5", "dom"],
         "module": "CommonJS",
+        "noImplicitAny": true,
         "outDir": "lib",
         "removeComments": true,
         "rootDir": "src",

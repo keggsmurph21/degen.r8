@@ -3,14 +3,18 @@ import {expect} from "chai";
 
 import {permute, sortIntoTiers} from "..";
 
+interface NumberKey {
+    key: number;
+}
+
 describe("Utils", () => {
     it("sortIntoTiers", () => {
-        const intSort = (a, b) => a - b;
+        const intSort = (a: number, b: number) => a - b;
         expect(sortIntoTiers([], intSort)).to.deep.equal([]);
         expect(sortIntoTiers([1], intSort)).to.deep.equal([[1]]);
         expect(sortIntoTiers([1, 2], intSort)).to.deep.equal([[1], [2]]);
         expect(sortIntoTiers([1, 1], intSort)).to.deep.equal([[1, 1]]);
-        const intSortOnKey = (a, b) => a.key - b.key;
+        const intSortOnKey = (a: NumberKey, b: NumberKey) => a.key - b.key;
         expect(sortIntoTiers([{key: 1}, {key: 2}, {key: 2}, {key: 2}, {key: 3}],
                              intSortOnKey))
             .to.deep.equal(

@@ -1,6 +1,6 @@
 import io from "socket.io-client";
 
-export function connect(): io.Socket {
+export function connect(): SocketIOClient.Socket {
     const socket = io();
     return socket;
 }

@@ -8,7 +8,7 @@ export interface IParam<T extends ParamType> {
     DEFAULT: T;
     name: string;        // camelCase
     displayName: string; // human readable
-    validate(any): T;
+    validate(value: any): T;
 }
 
 class BoolParam implements IParam<boolean> {

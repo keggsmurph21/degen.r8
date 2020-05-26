@@ -1,3 +1,4 @@
+import {NextFunction, Request, Response} from "express";
 import passport from "passport";
 
 import {UserModel} from "../Models/UserModel";
@@ -12,11 +13,12 @@ export const authenticate = passport.authenticate("local", {
     "failureFlash": true,
 });
 
-export const isAuthenticated = (req, res, next) => {
-    if (req.isAuthenticated())
-        return next();
-    res.redirect("/login.do");
-};
+export const isAuthenticated =
+    (req: Request, res: Response, next: NextFunction) => {
+        if (req.isAuthenticated())
+            return next();
+        res.redirect("/login.do");
+    };
 
 export const register = async (name: string, password: string) => {
     if (!name)

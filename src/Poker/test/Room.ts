@@ -10,7 +10,7 @@ import {Bet} from "../Round";
 const STARTING_BALANCE = ADD_BALANCE.DEFAULT;
 
 describe("Room", () => {
-    const getPlayers = num => {
+    const getPlayers = (num: number) => {
         let players = [];
         for (let i = 0; i < num; ++i)
             players.push(i);

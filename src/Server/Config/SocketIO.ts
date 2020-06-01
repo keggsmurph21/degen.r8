@@ -1,260 +1,20 @@
 import {Express, Response} from "express";
 import {Server} from "http";
-import {Message} from "Interface/Chat";
-import {
-    CreateRoomRequest,
-    CreateRoomResponse,
-    JoinRoomRequest,
-    JoinRoomResponse,
-    NewRoom,
-    QueryRoomsRequest,
-    UpdateRoom,
-} from "Interface/Lobby";
-import {
-    AddBalanceRequest,
-    CallRequest,
-    FoldRequest,
-    LeaveRequest,
-    RaiseRequest,
-    RoomResponse,
-    SitRequest,
-    StandRequest,
-    StartRequest,
-} from "Interface/Room";
-import {Room} from "Poker/Room";
-import {Bet} from "Poker/Round";
 import socketio from "socket.io";
-
-import {
-    addBalance,
-    create,
-    enter,
-    leave,
-    makeBet,
-    sit,
-    stand,
-    startRound,
-    summarize,
-    validateRoomParameters
-} from "../Services/RoomService";
 
 import {sessionMiddleware} from "./Session";
 
-function channelNameFor(roomId: number|null): string {
+export function channelNameFor(roomId: number|null): string {
     return roomId == null ? "lobby" : ("room-" + roomId);
 }
 
-async function onQueryRooms(io: socketio.Server, socket: socketio.Socket,
-                            data: QueryRoomsRequest): Promise<void> {
-    const rooms = await summarize();
-    socket.emit("query-rooms", {rooms});
-}
+export let io: socketio.Server = null;
 
-async function onJoinRoom(io: socketio.Server, socket: socketio.Socket,
-                          data: JoinRoomRequest): Promise<void> {
-    console.log("onJoin", data);
-    let res: JoinRoomResponse;
-    try {
-        const userId = socket.request.session.passport.user;
-        const roomId = data.roomId;
-        const secret = data.secret;
-        const room = await enter(userId, roomId, secret);
-        socket.request.session.roomId = roomId;
-        socket.request.session.secret = secret;
-        socket.request.session.save();
-        if (!secret) {
-            const updateRoomData: UpdateRoom = {
-                id: roomId,
-                capacity: room.params.capacity,
-                numSitting: room.sitting.filter(p => p !== null).length,
-                numStanding: room.standing.filter(p => p !== null).length,
-                minimumBet: room.params.minimumBet,
-            };
-            socket.to(channelNameFor(null)).emit("update-room", updateRoomData);
-        }
-        res = {error: null, roomId};
-    } catch (e) {
-        res = {error: e.message, roomId: null};
-    }
-    socket.emit("join-room", res);
-}
+export function configureSocketIO(server: Server,
+                                  setUpHandlers: (socket: socketio.Socket) =>
+                                      void): socketio.Server {
 
-async function onCreateRoom(io: socketio.Server, socket: socketio.Socket,
-                            data: CreateRoomRequest): Promise<void> {
-    let res: CreateRoomResponse;
-    try {
-        const params = validateRoomParameters(data.params);
-        const userId = socket.request.session.passport.user;
-        const secret = data.params.secret;
-        const [roomId, room] = await create(userId, secret, params);
-        socket.request.session.roomId = roomId;
-        socket.request.session.secret = secret;
-        socket.request.session.save();
-        if (!secret) {
-            const newRoomData: NewRoom = {
-                id: roomId,
-                capacity: room.params.capacity,
-                numSitting: room.sitting.filter(p => p !== null).length,
-                numStanding: room.standing.filter(p => p !== null).length,
-                minimumBet: room.params.minimumBet,
-            };
-            socket.to(channelNameFor(null)).emit("new-room", newRoomData);
-        }
-        res = {error: null, roomId};
-    } catch (e) {
-        res = {error: e.message, roomId: null};
-    }
-    socket.emit("create-room", res);
-}
-
-function broadcastRoomView(io: socketio.Server, roomId: number,
-                           room: Room): void {
-    io.in(channelNameFor(roomId)).clients((err: any, clients: number[]) => {
-        if (err)
-            throw err;
-        clients.forEach((socketId: number) => {
-            const socket = io.sockets.connected[socketId];
-            const userId = socket.request.session.passport.user;
-            const res: RoomResponse = {
-                error: null,
-                view: room.viewFor(userId),
-            };
-            socket.emit("room-changed", res);
-        });
-    });
-}
-
-async function onSit(io: socketio.Server, socket: socketio.Socket,
-                     data: SitRequest): Promise<void> {
-    console.log("onSit", data);
-    try {
-        const userId = socket.request.session.passport.user;
-        const roomId = socket.request.session.roomId;
-        const secret = socket.request.session.secret;
-        const seatIndex = data.seatIndex;
-        const room = await sit(userId, roomId, secret, seatIndex);
-        broadcastRoomView(io, roomId, room);
-    } catch (e) {
-        const res: RoomResponse = {error: e.message, view: null};
-        socket.emit("room-changed", res);
-    }
-}
-
-async function onStand(io: socketio.Server, socket: socketio.Socket,
-                       data: StandRequest): Promise<void> {
-    console.log("onStand", data);
-    try {
-        const userId = socket.request.session.passport.user;
-        const roomId = socket.request.session.roomId;
-        const secret = socket.request.session.secret;
-        const room = await stand(userId, roomId, secret);
-        broadcastRoomView(io, roomId, room);
-    } catch (e) {
-        const res: RoomResponse = {error: e.message, view: null};
-        socket.emit("room-changed", res);
-    }
-}
-
-async function onLeave(io: socketio.Server, socket: socketio.Socket,
-                       data: LeaveRequest): Promise<void> {
-    console.log("onLeave", data);
-    try {
-        const userId = socket.request.session.passport.user;
-        const roomId = socket.request.session.roomId;
-        const secret = socket.request.session.secret;
-        const room = await leave(userId, roomId, secret);
-        broadcastRoomView(io, roomId, room);
-    } catch (e) {
-        const res: RoomResponse = {error: e.message, view: null};
-        socket.emit("room-changed", res);
-    }
-}
-
-async function onStart(io: socketio.Server, socket: socketio.Socket,
-                       data: StartRequest): Promise<void> {
-    console.log("onStart", data);
-    try {
-        const userId = socket.request.session.passport.user;
-        const roomId = socket.request.session.roomId;
-        const secret = socket.request.session.secret;
-        const room = await startRound(userId, roomId, secret);
-        broadcastRoomView(io, roomId, room);
-    } catch (e) {
-        const res: RoomResponse = {error: e.message, view: null};
-        socket.emit("room-changed", res);
-    }
-}
-
-async function onAddBalance(io: socketio.Server, socket: socketio.Socket,
-                            data: AddBalanceRequest): Promise<void> {
-    console.log("onAddBalance", data);
-    try {
-        const userId = socket.request.session.passport.user;
-        const roomId = socket.request.session.roomId;
-        const secret = socket.request.session.secret;
-        const credit = data.credit;
-        const room = await addBalance(userId, roomId, secret, credit);
-        broadcastRoomView(io, roomId, room);
-    } catch (e) {
-        const res: RoomResponse = {error: e.message, view: null};
-        socket.emit("room-changed", res);
-    }
-}
-
-async function onFold(io: socketio.Server, socket: socketio.Socket,
-                      data: FoldRequest): Promise<void> {
-    console.log("onFold", data);
-    try {
-        const userId = socket.request.session.passport.user;
-        const roomId = socket.request.session.roomId;
-        const secret = socket.request.session.secret;
-        const room = await makeBet(userId, roomId, secret, Bet.Fold, 0);
-        broadcastRoomView(io, roomId, room);
-    } catch (e) {
-        const res: RoomResponse = {error: e.message, view: null};
-        socket.emit("room-changed", res);
-    }
-}
-
-async function onCall(io: socketio.Server, socket: socketio.Socket,
-                      data: CallRequest): Promise<void> {
-    console.log("onCall", data);
-    try {
-        const userId = socket.request.session.passport.user;
-        const roomId = socket.request.session.roomId;
-        const secret = socket.request.session.secret;
-        const room = await makeBet(userId, roomId, secret, Bet.Call, 0);
-        broadcastRoomView(io, roomId, room);
-    } catch (e) {
-        const res: RoomResponse = {error: e.message, view: null};
-        socket.emit("room-changed", res);
-    }
-}
-
-async function onRaise(io: socketio.Server, socket: socketio.Socket,
-                       data: RaiseRequest): Promise<void> {
-    console.log("onRaise", data);
-    try {
-        const userId = socket.request.session.passport.user;
-        const roomId = socket.request.session.roomId;
-        const secret = socket.request.session.secret;
-        const raiseBy = data.raiseBy;
-        const room = await makeBet(userId, roomId, secret, Bet.Raise, raiseBy);
-        broadcastRoomView(io, roomId, room);
-    } catch (e) {
-        const res: RoomResponse = {error: e.message, view: null};
-        socket.emit("room-changed", res);
-    }
-}
-
-function onMessage(io: socketio.Server, socket: socketio.Socket,
-                   data: Message): void {
-    // FIXME: Implement
-    console.log("onMessage", data);
-}
-
-export function configureSocketIO(server: Server): void {
-    const io = socketio(server);
+    io = socketio(server);
 
     io.use((socket: socketio.Socket, next) => {
         // Allow socket.io to access express / passport session
@@ -262,15 +22,6 @@ export function configureSocketIO(server: Server): void {
     });
 
     io.on("connection", async (socket: socketio.Socket) => {
-        /*
-        const session = socket.request.session;
-        // FIXME: Why is this necessary?
-        if (session.connections == null)
-            session.connections = 0;
-        session.connections++;
-        session.save();
-         */
-
         console.log("socket", socket.id, "connected with query",
                     socket.handshake.query);
 
@@ -291,29 +42,11 @@ export function configureSocketIO(server: Server): void {
         socket.join(channel);
         console.log("socket", socket.id, "joined channel", channel);
 
-        // global channels
-        socket.on("message", data => { onMessage(io, socket, data); });
-
-        // lobby channels
-        socket.on("query-rooms",
-                  async data => { await onQueryRooms(io, socket, data); });
-        socket.on("join-room",
-                  async data => { await onJoinRoom(io, socket, data); });
-        socket.on("create-room",
-                  async data => { await onCreateRoom(io, socket, data); });
-
-        // room channels
-        socket.on("sit", async data => { await onSit(io, socket, data); });
-        socket.on("stand", async data => { await onStand(io, socket, data); });
-        socket.on("leave", async data => { await onLeave(io, socket, data); });
-        socket.on("start", async data => { await onStart(io, socket, data); });
-        socket.on("add-balance",
-                  async data => { await onAddBalance(io, socket, data); });
-        socket.on("fold", async data => { await onFold(io, socket, data); });
-        socket.on("call", async data => { await onCall(io, socket, data); });
-        socket.on("raise", async data => { await onRaise(io, socket, data); });
-
         socket.on("disconnect",
                   () => { console.log("socket", socket.id, "disconnected"); });
+
+        setUpHandlers(socket);
     });
+
+    return io;
 }

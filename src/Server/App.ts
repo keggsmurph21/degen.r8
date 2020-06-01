@@ -8,6 +8,7 @@ import path from "path";
 
 import {configurePassport} from "./Config/Passport";
 import {sessionMiddleware} from "./Config/Session";
+import {configureSocketIO} from "./Config/SocketIO";
 import {
     getLobby,
     getRoom,
@@ -26,10 +27,26 @@ import {
     postLogout,
     postRegister
 } from "./Controllers/UserController";
-
 import {authenticate, isAuthenticated} from "./Services/UserService";
+import {
+    onCreateRoom,
+    onJoinRoom,
+    onQueryRooms,
+} from "./SocketControllers/Lobby";
+import {onMessage} from "./SocketControllers/Messaging";
+import {
+    onAddBalance,
+    onCall,
+    onFold,
+    onLeave,
+    onRaise,
+    onSit,
+    onStand,
+    onStart,
+} from "./SocketControllers/Room";
 
-export const app = express();
+const app = express();
+const PORT = process.env.PORT;
 
 app.set("views", path.join(__dirname, "Views"));
 app.set("view engine", "ejs");
@@ -63,3 +80,32 @@ app.post("/room/sit.rest", isAuthenticated, postSit);
 app.post("/room/stand.rest", isAuthenticated, postStand);
 app.post("/room/startRound.rest", isAuthenticated, postStartRound);
 app.post("/room/bet.rest", isAuthenticated, postBet);
+
+export const serve = () => {
+    const server = app.listen(
+        PORT, () => { console.log(`Listening at http://localhost:${PORT}`); });
+
+    configureSocketIO(server, socket => {
+        // global channels
+        socket.on("message", data => { onMessage(socket, data); });
+
+        // lobby channels
+        socket.on("query-rooms",
+                  async data => { await onQueryRooms(socket, data); });
+        socket.on("join-room",
+                  async data => { await onJoinRoom(socket, data); });
+        socket.on("create-room",
+                  async data => { await onCreateRoom(socket, data); });
+
+        // room channels
+        socket.on("sit", async data => { await onSit(socket, data); });
+        socket.on("stand", async data => { await onStand(socket, data); });
+        socket.on("leave", async data => { await onLeave(socket, data); });
+        socket.on("start", async data => { await onStart(socket, data); });
+        socket.on("add-balance",
+                  async data => { await onAddBalance(socket, data); });
+        socket.on("fold", async data => { await onFold(socket, data); });
+        socket.on("call", async data => { await onCall(socket, data); });
+        socket.on("raise", async data => { await onRaise(socket, data); });
+    });
+};

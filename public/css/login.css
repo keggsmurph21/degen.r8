@@ -85,4 +85,58 @@ a {
   display: none;
 }
 
+.input-widget, .input-widget .input-container {
+  display: flex;
+  align-items: center;
+}
+.input-widget .number-adjust {
+  width: 2ch;
+  padding: 0;
+  margin: 0;
+  border: none;
+  border-radius: 10px;
+}
+.input-widget .slider-view {
+  text-align: right;
+}
+.input-widget.bool-input {
+  padding-top: 1ch;
+}
+.input-widget.int-input .slider-view {
+  min-width: 4ch;
+}
+.input-widget.float-input .slider-view {
+  min-width: 7ch;
+}
+.input-widget.str-input {
+  padding-top: 1ch;
+}
+.input-widget.str-input input {
+  background-color: #dedbef;
+  border: none;
+  border-radius: 10px;
+  padding: 0 10px;
+  width: 100%;
+}
+
+input[type=range] {
+  background: transparent;
+}
+input:focus {
+  outline: none;
+}
+
+button, .button {
+  background: #dedbef;
+  border: 3px solid black;
+  border-radius: 10px;
+  font-weight: bold;
+  line-height: 1.7em;
+  font-family: monospace;
+  /* FIXME: Why is this necessary? */
+}
+button:hover, .button:hover {
+  cursor: pointer;
+}
+
 /*# sourceMappingURL=login.css.map */

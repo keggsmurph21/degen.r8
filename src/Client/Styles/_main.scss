@@ -1,3 +1,5 @@
+@use "sass:color";
+
 @import "partials/banner";
 @import "partials/colors";
 @import "partials/chat";
@@ -27,4 +29,74 @@ a {
 
 .hidden {
     display: none;
+}
+
+.input-widget {
+    &, .input-container {
+        display: flex;
+        align-items: center;
+    }
+
+    .number-adjust {
+        width: 2ch;
+        padding: 0;
+        margin: 0;
+        border: none;
+        border-radius: 10px;
+    }
+
+    .slider-view {
+        text-align: right;
+    }
+
+    &.bool-input {
+        padding-top: 1ch;
+    }
+
+    &.int-input {
+        .slider-view {
+            min-width: 4ch;
+        }
+    }
+
+    &.float-input {
+        .slider-view {
+            min-width: 7ch;
+        }
+    }
+
+    &.str-input {
+        padding-top: 1ch;
+
+        input {
+            background-color: color.adjust($pale-purple, $alpha: 0.2);
+            border: none;
+            border-radius: 10px;
+            padding: 0 10px;
+            width: 100%;
+        }
+    }
+}
+
+input {
+    &[type=range] {
+        background: transparent;
+    }
+
+    &:focus {
+        outline: none;
+    }
+}
+
+button, .button {
+    background: $pale-purple;
+    border: 3px solid black;
+    border-radius: 10px;
+    font-weight: bold;
+    line-height: 1.7em;
+    font-family: monospace; /* FIXME: Why is this necessary? */
+
+    &:hover {
+        cursor: pointer;
+    }
 }

@@ -1,4 +1,5 @@
 import {ParamType} from "Poker/Defaults";
+import {clamp} from "Utils";
 
 interface IController {
     input: HTMLInputElement;
@@ -14,30 +15,32 @@ interface BaseInputParams<T extends ParamType> {
 abstract class BaseInputWidget<T extends ParamType, Params extends
                                    BaseInputParams<T>> implements IController {
     public container: HTMLDivElement;
+    public inputContainer: HTMLSpanElement;
     public input: HTMLInputElement;
     public label: HTMLLabelElement;
     constructor(public inputType: string, public params: Params) {
         this.container = document.createElement("div") as HTMLDivElement;
+        this.container.classList.add("input-widget");
+        this.container.classList.add(this.widgetClass());
 
         this.label = document.createElement("label") as HTMLLabelElement;
         this.label.setAttribute("for", params.id);
         this.label.innerText = params.labelText;
         this.container.appendChild(this.label);
 
+        this.inputContainer = document.createElement("span") as HTMLSpanElement;
+        this.inputContainer.classList.add("input-container");
+        this.container.appendChild(this.inputContainer);
+
         this.input = document.createElement("input") as HTMLInputElement;
         this.input.setAttribute("id", params.id);
         this.input.setAttribute("type", inputType);
-        this.container.appendChild(this.input);
+        this.inputContainer.appendChild(this.input);
     }
     public abstract value(): T;
     public abstract setValue(value: T): void;
-    private setDisabled(disabled: boolean): void {
-        if (disabled) {
-            this.input.removeAttribute("disabled");
-        } else {
-            this.input.setAttribute("disabled", "");
-        }
-    }
+    protected abstract widgetClass(): string;
+    protected abstract setDisabled(disabled: boolean): void;
     public setController(controller: IController): void {
         if (controller != null) {
             controller.input.addEventListener(
@@ -55,8 +58,16 @@ export class BoolInputWidget extends BaseInputWidget<boolean, BoolInputParams> {
         if (params.default)
             this.input.setAttribute("checked", "");
     }
+    protected widgetClass() { return "bool-input"; }
     public value(): boolean { return this.input.checked; }
     public setValue(value: boolean): void { this.input.checked = value; }
+    protected setDisabled(disabled: boolean): void {
+        if (disabled) {
+            this.input.removeAttribute("disabled");
+        } else {
+            this.input.setAttribute("disabled", "");
+        }
+    }
 }
 
 export class SliderViewWidget {
@@ -73,58 +84,87 @@ export class SliderViewWidget {
     }
 }
 
-export interface IntInputParams extends BaseInputParams<number> {
-    min: number;
-    max: number;
-}
-
-export class IntInputWidget extends BaseInputWidget<number, IntInputParams> {
-    public viewWidget: SliderViewWidget;
-    constructor(params: IntInputParams) {
-        super("range", params);
-        this.input.setAttribute("min", params.min.toString());
-        this.input.setAttribute("max", params.max.toString());
-        this.input.setAttribute("step", "1");
-        this.input.setAttribute("value", params.default.toString());
-
-        this.viewWidget =
-            new SliderViewWidget(this, (value: number) => value.toString());
-        this.viewWidget.update();
-        this.container.appendChild(this.viewWidget.container);
+class AdjustButtonWidget {
+    public button: HTMLButtonElement;
+    constructor(public buttonText: string, public isDisabled: () => boolean,
+                public onClick: () => void) {
+        this.button = document.createElement("button") as HTMLButtonElement;
+        this.button.setAttribute("type", "button");
+        this.button.classList.add("number-adjust");
+        this.button.innerText = buttonText;
+        this.button.addEventListener("click", onClick);
     }
-    public value(): number { return parseInt(this.input.value); }
-    public setValue(value: number): void {
-        this.input.value = value.toString();
-        this.viewWidget.update();
+    public update(): void {
+        this.button.removeAttribute("disabled");
+        if (this.isDisabled())
+            this.button.setAttribute("disabled", "");
     }
 }
 
-export interface FloatInputParams extends BaseInputParams<number> {
+interface NumberParams extends BaseInputParams<number> {
     min: number;
     max: number;
     step: number;
 }
 
-export class FloatInputWidget extends
-    BaseInputWidget<number, FloatInputParams> {
+abstract class NumberInputWidget<NumberParamsType extends NumberParams> extends
+    BaseInputWidget<number, NumberParamsType> {
+    public decrementButton: AdjustButtonWidget;
+    public incrementButton: AdjustButtonWidget;
     public viewWidget: SliderViewWidget;
-    constructor(params: FloatInputParams) {
+    constructor(params: NumberParamsType) {
         super("range", params);
-        this.input.setAttribute("min", params.min.toString());
-        this.input.setAttribute("max", params.max.toString());
-        this.input.setAttribute("step", params.step.toString());
-        this.input.setAttribute("value", params.default.toString());
+        this.input.setAttribute("min", this.formatValue(params.min));
+        this.input.setAttribute("max", this.formatValue(params.max));
+        this.input.setAttribute("step", this.formatValue(params.step));
+        this.input.setAttribute("value", this.formatValue(params.default));
 
-        this.viewWidget =
-            new SliderViewWidget(this, (value: number) => value.toFixed(2));
+        this.decrementButton = new AdjustButtonWidget(
+            "<", () => this.value() <= this.params.min,
+            () => this.setValue(this.value() - params.step));
+        this.inputContainer.insertBefore(this.decrementButton.button,
+                                         this.input);
+
+        this.incrementButton = new AdjustButtonWidget(
+            ">", () => this.value() >= this.params.max,
+            () => this.setValue(this.value() + params.step));
+        this.inputContainer.appendChild(this.incrementButton.button);
+
+        this.viewWidget = new SliderViewWidget(this, this.formatValue);
         this.viewWidget.update();
-        this.container.appendChild(this.viewWidget.container);
+        this.inputContainer.appendChild(this.viewWidget.container);
     }
-    public value(): number { return parseFloat(this.input.value); }
+    protected abstract formatValue(value: number): string;
     public setValue(value: number): void {
+        value = clamp(this.params.min, value, this.params.max);
         this.input.value = value.toString();
+        this.decrementButton.update();
         this.viewWidget.update();
+        this.incrementButton.update();
     }
+    protected setDisabled(disabled: boolean): void {
+        if (disabled) {
+            this.input.removeAttribute("disabled");
+        } else {
+            this.input.setAttribute("disabled", "");
+        }
+    }
+}
+
+export interface IntInputParams extends NumberParams {}
+
+export class IntInputWidget extends NumberInputWidget<IntInputParams> {
+    protected formatValue(value: number) { return value.toString(); }
+    public value(): number { return parseInt(this.input.value); }
+    protected widgetClass() { return "int-input"; }
+}
+
+export interface FloatInputParams extends NumberParams {}
+
+export class FloatInputWidget extends NumberInputWidget<FloatInputParams> {
+    protected formatValue(value: number) { return value.toFixed(2); }
+    public value(): number { return parseFloat(this.input.value); }
+    protected widgetClass() { return "float-input"; }
 }
 
 export interface StrInputParams extends BaseInputParams<string> {
@@ -143,6 +183,14 @@ export class StrInputWidget extends BaseInputWidget<string, StrInputParams> {
     }
     public value(): string { return this.input.value; }
     public setValue(value: string): void { this.input.value = value; }
+    protected widgetClass() { return "str-input"; }
+    protected setDisabled(disabled: boolean): void {
+        if (disabled) {
+            this.input.removeAttribute("disabled");
+        } else {
+            this.input.setAttribute("disabled", "");
+        }
+    }
 }
 
 export type InputWidget =

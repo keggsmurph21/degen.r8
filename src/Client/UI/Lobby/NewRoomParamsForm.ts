@@ -9,17 +9,21 @@ import {
     StrInputWidget
 } from "../Input";
 
-type X = {
-    [name: string]: InputWidget
-}
-
 export class NewRoomParamsForm {
     public readonly container: HTMLElement;
-    public readonly submitButton: HTMLButtonElement;
-    public newRoomParams: X = {};
+    public newRoomParams: {[name: string]: InputWidget} = {};
     constructor(params: Param[],
                 public readonly onSubmit: (entries: Form) => void) {
         this.container = document.getElementById("new-room-params-container");
+
+        const titleContainer = document.createElement("div") as HTMLDivElement;
+        titleContainer.classList.add("title-container");
+        this.container.appendChild(titleContainer);
+
+        const title = document.createElement("h3") as HTMLHeadingElement;
+        title.innerText = "create new room";
+        titleContainer.appendChild(title);
+
         params.forEach(param => {
             let newRoomParam: InputWidget;
             console.log(`Getting widget for type "${param.type}"`, param);
@@ -38,6 +42,7 @@ export class NewRoomParamsForm {
                     default: param.DEFAULT,
                     min: param.MIN,
                     max: param.MAX,
+                    step: 1,
                 });
                 break;
             case "float":
@@ -80,12 +85,17 @@ export class NewRoomParamsForm {
         this.newRoomParams["secret"] = secretParam;
         this.container.appendChild(secretParam.container);
 
-        this.submitButton = document.createElement("button");
-        this.submitButton.setAttribute("type", "button");
-        this.submitButton.innerText = "create";
-        this.submitButton.addEventListener("click",
-                                           _ => this.onSubmit(this.entries()));
-        this.container.appendChild(this.submitButton);
+        const submitContainer = document.createElement("div") as HTMLDivElement;
+        submitContainer.classList.add("submit-container");
+        this.container.appendChild(submitContainer);
+
+        const submitButton =
+            document.createElement("button") as HTMLButtonElement;
+        submitButton.setAttribute("type", "button");
+        submitButton.innerText = "create";
+        submitButton.addEventListener("click",
+                                      _ => this.onSubmit(this.entries()));
+        submitContainer.appendChild(submitButton);
     }
     public entries(): Form {
         let entries: Form = {};
